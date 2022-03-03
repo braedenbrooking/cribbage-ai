@@ -115,15 +115,12 @@ class Player:
                 if cardsOnTable.size > 3 and checkForPair(cardsOnTable[cardsOnTable.size-1], cardsOnTable[cardsOnTable.size-4]):
                     print("4 of a kind for 12")
                     self.scorePoints(12)
-                    return
                 else:
                     print("3 of a kind for 6")
                     self.scorePoints(6)
-                    return
             else:
                 print("Pair for 2")
                 self.scorePoints(2)
-                return
         
         # Points for runs (Not possible if there is a pair)
         top = pydealer.Stack()
@@ -172,32 +169,15 @@ class Player:
         scoringHand.sort(RANKS) # For ease of calculations
 
         # 15s
-        handValues = [x.value for x in scoringHand]
-        find15s(handValues)
-
-
-
-        """
-        for i in range(scoringHand.size):
-            sum = convertCardToInt(scoringHand[i].value)
-            for j in range(i, scoringHand.size):
-                if sum + convertCardToInt(scoringHand[j].value) == 15:
-                    totalHandScore += 2
-                    print("Fifteen " + str(totalHandScore))
-                    break
-                elif sum + convertCardToInt(scoringHand[j].value) < 15:
-                    sum += convertCardToInt(scoringHand[j].value)
-
-
-
-
-        for i in range(scoringHand.size): # Size should always be 5
-            for j in range(i+1,scoringHand.size):
-                if convertCardToInt(scoringHand[i].value)+convertCardToInt(scoringHand[j].value) == 15:
-                    totalHandScore += 2
-                    print("Fifteen " + str(totalHandScore) + "(" + str(scoringHand[i]) + " + " + str(scoringHand[j]) + ")")
-        """
-
+        handValues = [convertCardToInt(x.value) for x in scoringHand]
+        fifteenspoints = 0
+        fifteenspoints += find15sTwoCard(handValues)
+        fifteenspoints += find15sThreeCard(handValues)
+        fifteenspoints += find15sFourCard(handValues)
+        fifteenspoints += find15sFiveCard(handValues)
+        if fifteenspoints:
+            print(str(fifteenspoints) + " from 15s")
+            totalHandScore += fifteenspoints
 
         # 4 of a kinds, 3 of a kinds, and pairs
         pairValues = []
@@ -273,9 +253,40 @@ def checkForRun(stack): # checks if all the cards in the stack are sequent if no
             return False
     return True
 
-def find15s(values):
-    print()
-    # No clue
+def find15sTwoCard(values):
+    points = 0
+    for i in range(len(values)):
+        for j in range(i+1, len(values)):
+            if values[i] + values[j] == 15:
+                points += 2
+    return points
+
+
+def find15sThreeCard(values):
+    points = 0
+    for i in range(len(values)):
+        for j in range(i+1, len(values)):
+            for k in range(j+1, len(values)):
+                if values[i] + values[j] == 15:
+                    points += 2
+    return points
+
+def find15sFourCard(values):
+    points = 0
+    for i in range(len(values)):
+        for j in range(i+1, len(values)):
+            for k in range(j+1, len(values)):
+                for l in range(k+1, len(values)):
+                    if values[i] + values[j] == 15:
+                        points += 2
+    return points
+
+def find15sFiveCard(values):
+    if values[0] + values[1] + values[2] + values[3] + values[4] == 15:
+        return 2
+    else:
+        return 0
+
 
 def getNextValue(card):
     if card.value == '10':
