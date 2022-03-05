@@ -121,22 +121,29 @@ class Player:
             else:
                 print("Pair for 2")
                 self.scorePoints(2)
-        
+
+        if cardsOnTable.size < 3:
+            return
+
         # Points for runs (Not possible if there is a pair)
         top = pydealer.Stack()
         top.insert_list([cardsOnTable[cardsOnTable.size-1], cardsOnTable[cardsOnTable.size-2], cardsOnTable[cardsOnTable.size-3]],0)
         top.sort(RANKS)
         runPoints = 0
-        for i in range(4,cardsOnTable.size+1):
+        if cardsOnTable.size == 3:
             if checkForRun(top):
-                if runPoints == 0:
-                    runPoints = 3
+                runPoints = 3
+        else:
+            for i in range(cardsOnTable.size-3):
+                if checkForRun(top):
+                    if runPoints == 0:
+                        runPoints = 3
+                    else:
+                        runPoints += 1
+                    top.add(cardsOnTable[cardsOnTable.size-(4+i)])
+                    top.sort(RANKS)
                 else:
-                    runPoints += 1
-                top.add(cardsOnTable[cardsOnTable.size-i])
-                top.sort(RANKS)
-            else:
-                break
+                    break
         
         if runPoints > 0:
             print(str(runPoints) + " for a run")
@@ -184,9 +191,9 @@ class Player:
         threeValue = None
         fourValue = None
         for i in range(scoringHand.size):
-            for j in range(i, scoringHand.size):
+            for j in range(i+1, scoringHand.size):
                 if not checkForPair(scoringHand[i], scoringHand[j]):
-                    break
+                    continue
                 elif scoringHand[i].value == threeValue:
                     threeValue = None
                     fourValue = scoringHand[i].value
@@ -209,14 +216,12 @@ class Player:
             totalHandScore += 12
             print("4 " + fourValue + "s is " + str(totalHandScore))
 
-        
-                
 
         # Runs
         runs = []
         for i in range(scoringHand.size-2): # Runs of 3
-            for j in range(i, scoringHand.size-1):
-                for k in range(j, scoringHand.size):
+            for j in range(i+1, scoringHand.size-1):
+                for k in range(j+1, scoringHand.size):
                     stack = pydealer.Stack()
                     stack.insert_list([scoringHand[i], scoringHand[j], scoringHand[k]])
                     if checkForRun(stack):
@@ -267,7 +272,7 @@ def find15sThreeCard(values):
     for i in range(len(values)):
         for j in range(i+1, len(values)):
             for k in range(j+1, len(values)):
-                if values[i] + values[j] == 15:
+                if values[i] + values[j] + values[k] == 15:
                     points += 2
     return points
 
@@ -277,7 +282,7 @@ def find15sFourCard(values):
         for j in range(i+1, len(values)):
             for k in range(j+1, len(values)):
                 for l in range(k+1, len(values)):
-                    if values[i] + values[j] == 15:
+                    if values[i] + values[j] + values[k] + values[l] == 15:
                         points += 2
     return points
 
@@ -292,7 +297,7 @@ def getNextValue(card):
     if card.value == '10':
         return 'Jack'
     try:
-        return int(card.value)+1
+        return str(int(card.value)+1)
     except ValueError:
         if card.value == 'Ace':
             return 2
@@ -395,6 +400,7 @@ def main():
         print("==CURRENT SCORE==")
         print("Player 1: " + str(p1.getScore()))
         print("Player 2: " + str(p2.getScore()))
+        print("=================")
         crib = pydealer.Stack()
         crib = p1.discardPrompt(crib)
         crib = p2.discardPrompt(crib)
@@ -414,9 +420,13 @@ def main():
             p1.scoreHand(cut)
             p2.scoreHand(cut)
             p2.scoreHand(cut, crib)
+            p1.setmyCrib(True)
+            p2.setmyCrib(False)
         else:
             p2.scoreHand(cut)
             p1.scoreHand(cut)
             p1.scoreHand(cut, crib)
+            p2.setmyCrib(True)
+            p1.setmyCrib(False)
 
 main()
