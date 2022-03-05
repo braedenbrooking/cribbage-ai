@@ -48,6 +48,7 @@ class Player:
     def discardPrompt(self, crib):
         print(self.getName() + "'s hand:")
         print(self.hand)
+        print()
         if self.myCrib():
             print("It is your crib")
         else:
@@ -74,8 +75,10 @@ class Player:
         print("Cards in play: ")
         print(cardsOnTable)
         print("Sum to: " + str(sumOnTable))
+        print()
         print(self.getName() + "'s hand: ")
         print(self.handCopy)
+        print()
 
         while True:
             selection = input("Select a card to play: (or 'go' if cannot play)") # TODO implement a checking system to see if you must 'go'
@@ -178,18 +181,18 @@ class Player:
         # 15s
         handValues = [convertCardToInt(x.value) for x in scoringHand]
         fifteenspoints = 0
-        fifteenspoints += find15sTwoCard(handValues)
-        fifteenspoints += find15sThreeCard(handValues)
-        fifteenspoints += find15sFourCard(handValues)
-        fifteenspoints += find15sFiveCard(handValues)
+        fifteenspoints += find15sTwoCard(handValues) # i.e. scoringHand.size choose 2
+        fifteenspoints += find15sThreeCard(handValues) # i.e. scoringHand.size choose 3
+        fifteenspoints += find15sFourCard(handValues) # i.e. scoringHand.size choose 4
+        fifteenspoints += find15sFiveCard(handValues) # i.e. scoringHand.size choose 5
         if fifteenspoints:
             print(str(fifteenspoints) + " from 15s")
             totalHandScore += fifteenspoints
 
         # 4 of a kinds, 3 of a kinds, and pairs
-        pairValues = []
-        threeValue = None
-        fourValue = None
+        pairValues = [] # Stores the card values of the pairs (ie hand = [3,3,4,4,7] -> pairValues = ['3','4']
+        threeValue = None # Same as above but there can only be one 3 of a kind
+        fourValue = None # Same as above
         for i in range(scoringHand.size):
             for j in range(i+1, scoringHand.size):
                 if not checkForPair(scoringHand[i], scoringHand[j]):
@@ -401,6 +404,7 @@ def main():
         print("Player 1: " + str(p1.getScore()))
         print("Player 2: " + str(p2.getScore()))
         print("=================")
+        print()
         crib = pydealer.Stack()
         crib = p1.discardPrompt(crib)
         crib = p2.discardPrompt(crib)
