@@ -124,6 +124,7 @@ class Player:
             else:
                 print("Pair for 2")
                 self.scorePoints(2)
+            return # Points for runs aren't possible if there is a pair, so there's no point in continuing through the function if you get here
 
         if cardsOnTable.size < 3:
             return
@@ -320,65 +321,46 @@ def convertCardToInt(value):
         return 10
 
 def layCards(p1, p2):
-    currentTurnP1 = p1.myCrib() # Needs to start reversed
+    # current is the index of the current player in the players and playerGo lists
+    # this way, the same code doesn't have to be explicitly written for each player
+    current = not p1.myCrib() # Needs to start reversed
+    players = [p1, p2]
+    playerGo = [False, False]
     sumOnTable = 0
     cardsOnTable = pydealer.Stack()
-    player1Go = False
-    player2Go = False
     while p1.cardsRemaining() > 0 or p2.cardsRemaining() > 0 :
-        currentTurnP1 = not currentTurnP1
+        current = not current
         newSumOnTable = 0
-        if currentTurnP1 and not player1Go:
-            newSumOnTable = p1.promptToPlay(cardsOnTable, sumOnTable)
-            if newSumOnTable == sumOnTable:
-                print("Player 1 says go")
-                if player2Go:
-                    p1.scorePoints(1)
-                player1Go = True
-            elif p1.checkVictory():
-                print("Player 1 has won the game")
-                return True
 
-            if not p1.cardsRemaining() > 0:
-                player1Go = True
-            
-        elif not player2Go:
-            newSumOnTable = p2.promptToPlay(cardsOnTable, sumOnTable)
-            if newSumOnTable == sumOnTable:
-                print("Player 2 says go")
-                if player1Go:
-                    p2.scorePoints(1)
-                player2Go = True
-            elif p2.checkVictory():
-                print("Player 2 has won the game")
-                return True
+        if players[current].cardsRemaining() == 0:
+            playerGo[current] = True
 
-            if not p2.cardsRemaining() > 0:
-                player2Go = True
+        if not playerGo[current]:
+            newSumOnTable = players[current].promptToPlay(cardsOnTable, sumOnTable)
+            if newSumOnTable == sumOnTable:
+                print("Player " + str(current+1) + " says go")
+                if playerGo[not current]:
+                    players[current].scorePoints(1)
+                playerGo[current] = True
+            elif players[current].checkVictory():
+                print("Player " + str(current+1) + " has won the game")
+                return True
         
         sumOnTable = newSumOnTable
 
         if sumOnTable == 31:
             print("31!")
-            if currentTurnP1:
-                p1.scorePoints(2)
-            else:
-                p2.scorePoints(2)
+            players[current].scorePoints(2)
             
-            player1Go = True
-            player2Go = True
+            playerGo = [True, True]
 
-        if player1Go and player2Go: # Resets
+        if all(playerGo): # Resets
             sumOnTable = 0
             cardsOnTable.empty()
-            player1Go = False
-            player2Go = False
+            playerGo = [False, False]
 
     print("Last card played")
-    if currentTurnP1:
-        p1.scorePoints(1)
-    else:
-        p2.scorePoints(1)
+    players[current].scorePoints(1)
 
     return False #returns false if no one has claimed victory
 
@@ -388,12 +370,14 @@ def cutTheDeck(deck):
 def main():
     p1 = Player("Player 1")
     p2 = Player("Player 2")
+    players = [p1, p2]
     
     if random.randint(0,1): # Reverses the starting crib 50% of the time
         p1.setmyCrib(True)
     else:
         p2.setmyCrib(True)
-    
+    dealer = p2.myCrib() # index of the player with the crib in the players list
+
 
     while True:
         deck = pydealer.Deck()
@@ -409,28 +393,21 @@ def main():
         crib = p1.discardPrompt(crib)
         crib = p2.discardPrompt(crib)
         crib.sort(RANKS)
+        print()
         cut = cutTheDeck(deck)
         print("The cut card is: " + str(cut))
         if cut.value == 'Jack':
-            if p1.myCrib():
-                p1.scorePoints(2)
-            else:
-                p2.scorePoints(2)
+            players[dealer].scorePoints(2)
 
         if layCards(p1, p2): 
             break # Victory Achieved
 
-        if not p1.myCrib():
-            p1.scoreHand(cut)
-            p2.scoreHand(cut)
-            p2.scoreHand(cut, crib)
-            p1.setmyCrib(True)
-            p2.setmyCrib(False)
-        else:
-            p2.scoreHand(cut)
-            p1.scoreHand(cut)
-            p1.scoreHand(cut, crib)
-            p2.setmyCrib(True)
-            p1.setmyCrib(False)
+        players[not dealer].scoreHand(cut)
+        players[dealer].scoreHand(cut)
+        players[dealer].scoreHand(cut, crib)
+        players[not dealer].setmyCrib(True)
+        players[dealer].setmyCrib(False)
+        dealer = not dealer
+        print()
 
 main()
