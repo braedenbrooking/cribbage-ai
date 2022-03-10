@@ -39,7 +39,7 @@ class PlayerAI(player.Player):
         return sumOnTable
 
 
-# Use AB pruning tree to discard a card
+# Use AI method to pick a card to discard
 # return: the card to discard
 def pickDiscard(self, crib):
     # Placeholder
@@ -51,4 +51,9 @@ def pickDiscard(self, crib):
 # return: the card to play
 def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
     # Placeholder
+    # strategy:
+    #   maximize 15s for self, minimize 15s for adversary
+    #   maximize completing runs, minimize setting up runs
+    #   maximize pairs/triplets etc
+    #   priority: triplets and above > runs > 15s
     return playableCards[0]
