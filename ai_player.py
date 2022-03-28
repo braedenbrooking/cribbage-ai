@@ -191,6 +191,7 @@ def minimax(self, node, cardPlayed, depth, maximizingPlayer):
         # for the CPU
         for card in handAsList:
             # TODO: nextNode is the state of the game as a result of playing the card variable
+            #       i.e. play(card, node)
             nextNode = node
             childValue = minimax(nextNode, depth - 1, False)
 
@@ -213,6 +214,7 @@ def minimax(self, node, cardPlayed, depth, maximizingPlayer):
         # in lowest "score" for the CPU
         for card in handAsList:
             # TODO: nextNode is the state of the game as a result of playing the card variable
+            #       i.e. play(card, node)
             nextNode = node
             childValue = minimax(nextNode, depth - 1, True)
 
