@@ -154,4 +154,69 @@ def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
     #   maximize completing runs, minimize setting up runs
     #   maximize pairs/triplets etc
     #   priority: triplets and above > runs > 15s
-    return playableCards[0]
+
+    # TODO: currentState is the state of the game currently
+    currentState = None
+
+    # Current depth is 2, maybe change later?
+    cardToPlay = minimax(self, currentState, None, 2, True)
+    return cardToPlay[1]
+
+
+# Find the best card to play for the AI
+# Parameters:
+#   node             = the current node to score
+#   cardPlayed       = the card played during this turn
+#   depth            = how many turns ahead we want to check. Depth of 2 = bot turn, player turn, bot turn
+#   maximizingPlayer = True if it's the bot's turn, otherwise false
+# Return:
+#   a tuple (score, card) representing what score is expected by playing the best card and what card that is
+def minimax(self, node, cardPlayed, depth, maximizingPlayer):
+    if depth == 0:  # TODO: potentially need to add: OR node is a terminal node
+        # TODO: Get the estimated score/heuristic value for the AI given the current node
+        #       This is not necessarily the score of the game
+        #       i.e. scoreOfAI(node, maximizingPlayer)
+        score = 0
+
+        # Return a tuple of the score and the card played in that round
+        return (score, cardPlayed)
+
+    if maximizingPlayer:
+        # Value tuple follows same format as return tuple
+        value = (-1 * float("inf"), None)
+
+        handAsList = self.hand[:]
+
+        # Play optimally, picking the card that results in the greatest "score"
+        # for the CPU
+        for card in handAsList:
+            # TODO: nextNode is the state of the game as a result of playing the card variable
+            nextNode = node
+            childValue = minimax(nextNode, depth - 1, False)
+
+            # Maximize
+            if childValue[0] > value[0]:
+                value = childValue
+        return value
+
+    else:
+        # Value tuple follows same format as return tuple
+        value = (float("inf"), None)
+
+        # TODO: Placeholder, in reality, will need to find out what to put for the real player's hand...
+        #       i.e. replace this with something. Should the bot "know" the player's actual hand to
+        #       make it seem like a better opponent?
+        realPlayerHand = self.hand
+        handAsList = realPlayerHand[:]
+
+        # Assuming the player plays optimally, and picks the card that results
+        # in lowest "score" for the CPU
+        for card in handAsList:
+            # TODO: nextNode is the state of the game as a result of playing the card variable
+            nextNode = node
+            childValue = minimax(nextNode, depth - 1, True)
+
+            # Minimize
+            if childValue[0] < value[0]:
+                value = childValue
+        return value
