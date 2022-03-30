@@ -193,7 +193,7 @@ def minimax(self, node, cardPlayed, depth, maximizingPlayer):
             # TODO: nextNode is the state of the game as a result of playing the card variable
             #       i.e. play(card, node)
             nextNode = node
-            childValue = minimax(nextNode, depth - 1, False)
+            childValue = minimax(nextNode, card, depth - 1, False)
 
             # Maximize
             if childValue[0] > value[0]:
@@ -216,7 +216,7 @@ def minimax(self, node, cardPlayed, depth, maximizingPlayer):
             # TODO: nextNode is the state of the game as a result of playing the card variable
             #       i.e. play(card, node)
             nextNode = node
-            childValue = minimax(nextNode, depth - 1, True)
+            childValue = minimax(nextNode, card, depth - 1, True)
 
             # Minimize
             if childValue[0] < value[0]:
