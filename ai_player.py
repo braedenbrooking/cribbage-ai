@@ -1,5 +1,6 @@
 import pydealer
 import player
+import game_state
 from util import *
 
 # Use AB pruning tree to determine what cards to discard and what cards to play
@@ -156,6 +157,7 @@ def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
     #   priority: triplets and above > runs > 15s
 
     # TODO: currentState is the state of the game currently
+    # i.e. use the game_state constructor
     currentState = None
 
     # Current depth is 2, maybe change later?
@@ -173,10 +175,7 @@ def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
 #   a tuple (score, card) representing what score is expected by playing the best card and what card that is
 def minimax(self, node, cardPlayed, depth, maximizingPlayer):
     if depth == 0:  # TODO: potentially need to add: OR node is a terminal node
-        # TODO: Get the estimated score/heuristic value for the AI given the current node
-        #       This is not necessarily the score of the game
-        #       i.e. scoreOfAI(node, maximizingPlayer)
-        score = 0
+        score = node.score()
 
         # Return a tuple of the score and the card played in that round
         return (score, cardPlayed)
@@ -190,9 +189,10 @@ def minimax(self, node, cardPlayed, depth, maximizingPlayer):
         # Play optimally, picking the card that results in the greatest "score"
         # for the CPU
         for card in handAsList:
-            # TODO: nextNode is the state of the game as a result of playing the card variable
-            #       i.e. play(card, node)
-            nextNode = node
+            # nextNode is the state of the game as a result of playing the card variable
+            # They ARE the AI player (true)
+            nextNode = node.playCard(card, True)
+
             childValue = minimax(nextNode, card, depth - 1, False)
 
             # Maximize
@@ -213,9 +213,10 @@ def minimax(self, node, cardPlayed, depth, maximizingPlayer):
         # Assuming the player plays optimally, and picks the card that results
         # in lowest "score" for the CPU
         for card in handAsList:
-            # TODO: nextNode is the state of the game as a result of playing the card variable
-            #       i.e. play(card, node)
-            nextNode = node
+            # nextNode is the state of the game as a result of playing the card variable
+            # They are NOT the ai player (false)
+            nextNode = node.playCard(card, False)
+
             childValue = minimax(nextNode, card, depth - 1, True)
 
             # Minimize
