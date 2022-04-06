@@ -70,6 +70,12 @@ class Player:
         for card in handAsList:
             self.handCopy.add(card)
 
+    def mustGo(self, sumOnTable):
+        for card in self.handCopy:
+            if convertCardToInt(card.value) + sumOnTable <= 31:
+                return False
+        return True
+
     def promptToPlay(self, cardsOnTable, sumOnTable):
         print("Cards in play: ")
         print(cardsOnTable)
@@ -80,9 +86,13 @@ class Player:
         print()
 
         while True:
-            selection = input(
-                "Select a card to play: (or 'go' if cannot play)"
-            )  # TODO implement a checking system to see if you must 'go'
+            if self.mustGo(sumOnTable):
+                selection = "go"
+            else:
+                selection = input(
+                    "Select a card to play:"
+                )
+
             if selection == "go":
                 return sumOnTable  # returns the initial sum if no card can be played
 
