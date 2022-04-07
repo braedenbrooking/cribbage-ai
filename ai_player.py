@@ -1,10 +1,12 @@
 import pydealer
 import player
-import game_state
+from game_state import GameState
 from util import *
 
 # Use AB pruning tree to determine what cards to discard and what cards to play
 class PlayerAI(player.Player):
+
+    cardsPutInCrib = pydealer.Stack()  # Used later so we remember what we discarded
 
     # Pick a card to discard automagically
     def discardPrompt(self, crib):
@@ -12,8 +14,9 @@ class PlayerAI(player.Player):
         while self.hand.size > 4:
             chosenCards = pickDiscard(self, crib)
             for chosenCard in chosenCards:
-                print("AI Player discards " + chosenCard)
+                print("AI Player discards " + chosenCard)  # TODO When we are finished obviously we shouldn't print out what the AI does
                 crib.add(self.hand.get(chosenCard))
+                self.cardsPutInCrib.add(chosenCard)
         return crib
 
     # Play a card automagically
@@ -158,7 +161,7 @@ def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
 
     # TODO: currentState is the state of the game currently
     # i.e. use the game_state constructor
-    currentState = None
+    currentState = GameState(None, playableCards, cardsOnTable, None, cut, self.cardsPutInCrib)
 
     # Current depth is 2, maybe change later?
     cardToPlay = minimax(self, currentState, None, 2, True)
