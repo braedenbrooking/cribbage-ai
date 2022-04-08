@@ -29,6 +29,8 @@ class GameState:
         else:
             ai.setmyCrib(True)
         self.dealer = ai.myCrib()  # index of the player with the crib in the players list
+        for p in self.players:
+            p.setGameState(self)
 
     def __init__(self, deck, player, ai, table, discard, cutCard, crib):  # Used by ai when looking at possible futures
         self.deck = deck
@@ -131,6 +133,11 @@ class GameState:
 
         return False  # returns false if no one has claimed victory
 
+    #Updates variables based on the players
+    def update(self):
+        self.playerHand = self.players[0].getHand()
+        self.aiHand = self.players[1].getHand()
+
 
     def gameFlow(self):
         p1 = self.players[0]
@@ -142,6 +149,7 @@ class GameState:
             self.crib = p1.discardPrompt(self.crib)
             self.crib = ai.discardPrompt(self.crib)
             self.crib.sort(RANKS)
+            self.update()
             self.cutCard = self.cutTheDeck(self.deck)
             self.printCutCard()
             if self.cutCard.value == "Jack":

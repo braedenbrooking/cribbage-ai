@@ -1,5 +1,6 @@
 import pydealer
 from util import *
+from game_state import GameState
 
 
 class Player:
@@ -8,6 +9,7 @@ class Player:
     __name = ""
     hand = None
     handCopy = None
+    gameStateRef = None
 
     def __init__(self, name):
         self.__name = name
@@ -20,6 +22,9 @@ class Player:
 
     def setmyCrib(self, isMyCrib):
         self.__myCrib = isMyCrib
+
+    def setGameState(self, gs):
+        self.gameStateRef = gs
 
     def getScore(self):
         return self.__score

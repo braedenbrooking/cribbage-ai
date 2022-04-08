@@ -29,7 +29,7 @@ class PlayerAI(player.Player):
             sumIfPlayed = sumOnTable + cardValue
 
             if sumIfPlayed <= 31:
-                playableCards.add(card)
+                playableCards.append(card)
 
         # no playable cards, go
         if len(playableCards) == 0:
@@ -223,7 +223,7 @@ class PlayerAI(player.Player):
 
         # TODO: currentState is the state of the game currently
         # i.e. use the game_state constructor
-        currentState = GameState(None, playableCards, cardsOnTable, None, cut, self.cardsPutInCrib)
+        currentState = copy.deepcopy(self.gameStateRef)
 
         # Current depth is 2, maybe change later?
         cardToPlay = self.minimax(currentState, None, 2, True)
