@@ -135,14 +135,14 @@ def calculateScore(scoringHand, prints=False):
             and scoringHand[0].suit == scoringHand[2].suit
             and scoringHand[0].suit == scoringHand[3].suit
     ):
-        if scoringHand[0].suit == scoringHand[4].suit:
-            totalHandScore += 5
-            if prints:
-                print("Flush including the cut for " + str(totalHandScore))
-        else:
+        if len(scoringHand) < 5 or scoringHand[0].suit == scoringHand[4].suit:
             totalHandScore += 4
             if prints:
                 print("Flush excluding the cut for " + str(totalHandScore))
+        else:
+            totalHandScore += 5
+            if prints:
+                print("Flush including the cut for " + str(totalHandScore))
 
     scoringHand.sort(RANKS)  # For ease of calculations
 
@@ -160,9 +160,7 @@ def calculateScore(scoringHand, prints=False):
         totalHandScore += fifteenspoints
 
     # 4 of a kinds, 3 of a kinds, and pairs
-    pairValues = (
-        []
-    )  # Stores the card values of the pairs (ie hand = [3,3,4,4,7] -> pairValues = ['3','4']
+    pairValues = []  # Stores the card values of the pairs (ie hand = [3,3,4,4,7] -> pairValues = ['3','4']
     threeValue = None  # Same as above but there can only be one 3 of a kind
     fourValue = None  # Same as above
     for i in range(scoringHand.size):
