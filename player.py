@@ -180,7 +180,7 @@ class Player:
             print(str(runPoints) + " for a run")
             self.scorePoints(runPoints)
 
-    def scoreHand(self, cutCard, scoringHand=None):
+    def scoreHand(self, cutCard=None, scoringHand=None):
         print()
         if scoringHand is None:
             scoringHand = self.hand
@@ -191,98 +191,16 @@ class Player:
         print(cutCard)
         print()
 
-        scoringHand.add(cutCard)
-        totalHandScore = 0
+        if cutCard is not None:
+            scoringHand.add(cutCard)
 
-        # Flush
-        if (
-            scoringHand[0].suit == scoringHand[1].suit
-            and scoringHand[0].suit == scoringHand[2].suit
-            and scoringHand[0].suit == scoringHand[3].suit
-        ):
-            if scoringHand[0].suit == scoringHand[4].suit:
-                totalHandScore += 5
-                print("Flush including the cut for " + str(totalHandScore))
-            else:
-                totalHandScore += 4
-                print("Flush excluding the cut for " + str(totalHandScore))
-
-        scoringHand.sort(RANKS)  # For ease of calculations
-
-        # 15s
-        handValues = [convertCardToInt(x.value) for x in scoringHand]
-        fifteenspoints = 0
-        fifteenspoints += find15sTwoCard(handValues)  # i.e. scoringHand.size choose 2
-        fifteenspoints += find15sThreeCard(handValues)  # i.e. scoringHand.size choose 3
-        fifteenspoints += find15sFourCard(handValues)  # i.e. scoringHand.size choose 4
-        fifteenspoints += find15sFiveCard(handValues)  # i.e. scoringHand.size choose 5
-        if fifteenspoints:
-            print(str(fifteenspoints) + " from 15s")
-            totalHandScore += fifteenspoints
-
-        # 4 of a kinds, 3 of a kinds, and pairs
-        pairValues = (
-            []
-        )  # Stores the card values of the pairs (ie hand = [3,3,4,4,7] -> pairValues = ['3','4']
-        threeValue = None  # Same as above but there can only be one 3 of a kind
-        fourValue = None  # Same as above
-        for i in range(scoringHand.size):
-            for j in range(i + 1, scoringHand.size):
-                if not checkForPair(scoringHand[i], scoringHand[j]):
-                    continue
-                elif scoringHand[i].value == threeValue:
-                    threeValue = None
-                    fourValue = scoringHand[i].value
-                    break
-                elif scoringHand[i].value in pairValues:
-                    pairValues.remove(scoringHand[i].value)
-                    threeValue = scoringHand[i].value
-                else:
-                    pairValues.append(scoringHand[i].value)
-
-        for val in pairValues:
-            totalHandScore += 2
-            print("A pair of " + val + "s is " + str(totalHandScore))
-
-        if threeValue is not None:
-            totalHandScore += 6
-            print("3 " + threeValue + "s is " + str(totalHandScore))
-
-        if fourValue is not None:
-            totalHandScore += 12
-            print("4 " + fourValue + "s is " + str(totalHandScore))
-
-        # Runs
-        runs = []
-        for i in range(scoringHand.size - 2):  # Runs of 3
-            for j in range(i + 1, scoringHand.size - 1):
-                for k in range(j + 1, scoringHand.size):
-                    stack = pydealer.Stack()
-                    stack.insert_list([scoringHand[i], scoringHand[j], scoringHand[k]])
-                    if checkForRun(stack):
-                        runs.append([i, j, k])
-
-        for run in runs:  # Runs of more than 3
-            for l in range(scoringHand.size):
-                if l in run:
-                    continue
-                else:
-                    stack = pydealer.Stack()
-                    stack.insert_list(
-                        [
-                            scoringHand[run[0]],
-                            scoringHand[run[1]],
-                            scoringHand[run[2]],
-                            scoringHand[l],
-                        ]
-                    )
-                    if checkForRun(stack):
-                        run.append(l)
+        totalHandScore = calculateScore(scoringHand)
 
         # Nobs (The right jack)
-        for card in scoringHand:
-            if card != cutCard and checkNobs(cutCard, card):
-                totalHandScore += 1
-                print("The right Jack (nobs) is" + str(totalHandScore))
+        if cutCard is not None:
+            for card in scoringHand:
+                if card != cutCard and checkNobs(cutCard, card):
+                    totalHandScore += 1
+                    print("The right Jack (nobs) is" + str(totalHandScore))
 
         self.scorePoints(totalHandScore)  # Score points at the end

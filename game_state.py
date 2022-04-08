@@ -54,7 +54,7 @@ class GameState:
         # Add the new card to the top of the table pile
         newTable.add(card)
 
-        return GameState(newPlayerHand, newAiHand, newTable, self.discardPile)
+        return GameState(self.deck, newPlayerHand, newAiHand, newTable, self.discardPile, self.cutCard, self.crib)
 
     # type: "player", "ai", "table"
     def copyStack(self, type):
@@ -72,20 +72,26 @@ class GameState:
             copiedHand.add(card)
         return copiedHand
 
-    # TODO: Score the state of this state for the AI
+    # Score the state of this state for the AI
     def scoreForAI(self):
-        return 0
+        if self.cutCard is not None:
+            aiHandCopy = self.copyStack("ai")
+            aiHandCopy.add(self.cutCard)
+            return calculateScore(aiHandCopy)
+        else:
+            newStack = pydealer.Stack(self.copyStack("ai"))
+            return calculateScore(self.copyStack("ai"))
 
     def cutTheDeck(self, deck):
         return deck.deal(1)[0]
 
     def layCards(self):
         p1 = self.players[0]
-        p2 = self.players[1]
+        p2 = self.players[1]  # We can change this to be called ai if you want
         # current is the index of the current player in the players and playerGo lists
         # this way, the same code doesn't have to be explicitly written for each player
         current = not p1.myCrib()  # Needs to start reversed
-        players = [p1, p2]
+        #players = [p1, p2]
         playerGo = [False, False]
         sumOnTable = 0
         cardsOnTable = pydealer.Stack()
@@ -93,17 +99,17 @@ class GameState:
             current = not current
             newSumOnTable = 0
 
-            if players[current].cardsRemaining() == 0:
+            if self.players[current].cardsRemaining() == 0:
                 playerGo[current] = True
 
             if not playerGo[current]:
-                newSumOnTable = players[current].promptToPlay(cardsOnTable, sumOnTable)
+                newSumOnTable = self.players[current].promptToPlay(cardsOnTable, sumOnTable)
                 if newSumOnTable == sumOnTable:
                     print("Player " + str(current + 1) + " says go")
                     if playerGo[not current]:
-                        players[current].scorePoints(1)
+                        self.players[current].scorePoints(1)
                     playerGo[current] = True
-                elif players[current].checkVictory():
+                elif self.players[current].checkVictory():
                     print("Player " + str(current + 1) + " has won the game")
                     return True
 
@@ -111,7 +117,7 @@ class GameState:
 
             if sumOnTable == 31:
                 print("31!")
-                players[current].scorePoints(2)
+                self.players[current].scorePoints(2)
 
                 playerGo = [True, True]
 
@@ -121,7 +127,7 @@ class GameState:
                 playerGo = [False, False]
 
         print("Last card played")
-        players[current].scorePoints(1)
+        self.players[current].scorePoints(1)
 
         return False  # returns false if no one has claimed victory
 
