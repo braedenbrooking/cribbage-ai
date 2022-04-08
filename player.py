@@ -192,15 +192,8 @@ class Player:
         print()
 
         if cutCard is not None:
-            scoringHand.add(cutCard)
-
-        totalHandScore = calculateScore(scoringHand)
-
-        # Nobs (The right jack)
-        if cutCard is not None:
-            for card in scoringHand:
-                if card != cutCard and checkNobs(cutCard, card):
-                    totalHandScore += 1
-                    print("The right Jack (nobs) is" + str(totalHandScore))
+            totalHandScore = calculateScore(scoringHand, cutCard, True)
+        else:
+            totalHandScore = calculateScore(scoringHand, True)
 
         self.scorePoints(totalHandScore)  # Score points at the end

@@ -1,4 +1,5 @@
 import pydealer
+import copy
 
 RANKS = {
     "values": {
@@ -108,13 +109,24 @@ def calculateTwoCardsPoints(card1, card2):
     else:
         return 0
 
-def calculateScore(scoringHand, cutCard):
-    scoringHand2 = scoringHand[:]
+def calculateScore(scoringHand, cutCard, prints=False):
+    scoringHand2 = copy.deepcopy(scoringHand)  # For Safety
+    scoringHand2.add(cutCard)
+
+    totalHandScore = calculateScore(scoringHand2)
+
+    # Nobs (The right jack)
+    if cutCard is not None:
+        for card in scoringHand:
+            if card != cutCard and checkNobs(cutCard, card):
+                totalHandScore += 1
+                if prints:
+                    print("The right Jack (nobs) is" + str(totalHandScore))
+    return totalHandScore
 
 
-
-
-def calculateScore(scoringHand):
+def calculateScore(scoringHand, prints=False):
+    scoringHand = copy.deepcopy(scoringHand)  # For Safety
     totalHandScore = 0
 
     # Flush
@@ -125,10 +137,12 @@ def calculateScore(scoringHand):
     ):
         if scoringHand[0].suit == scoringHand[4].suit:
             totalHandScore += 5
-            print("Flush including the cut for " + str(totalHandScore))
+            if prints:
+                print("Flush including the cut for " + str(totalHandScore))
         else:
             totalHandScore += 4
-            print("Flush excluding the cut for " + str(totalHandScore))
+            if prints:
+                print("Flush excluding the cut for " + str(totalHandScore))
 
     scoringHand.sort(RANKS)  # For ease of calculations
 
@@ -138,9 +152,11 @@ def calculateScore(scoringHand):
     fifteenspoints += find15sTwoCard(handValues)  # i.e. scoringHand.size choose 2
     fifteenspoints += find15sThreeCard(handValues)  # i.e. scoringHand.size choose 3
     fifteenspoints += find15sFourCard(handValues)  # i.e. scoringHand.size choose 4
-    fifteenspoints += find15sFiveCard(handValues)  # i.e. scoringHand.size choose 5
+    if len(handValues) >= 5:
+        fifteenspoints += find15sFiveCard(handValues)  # i.e. scoringHand.size choose 5
     if fifteenspoints:
-        print(str(fifteenspoints) + " from 15s")
+        if prints:
+            print(str(fifteenspoints) + " from 15s")
         totalHandScore += fifteenspoints
 
     # 4 of a kinds, 3 of a kinds, and pairs
@@ -165,15 +181,18 @@ def calculateScore(scoringHand):
 
     for val in pairValues:
         totalHandScore += 2
-        print("A pair of " + val + "s is " + str(totalHandScore))
+        if prints:
+            print("A pair of " + val + "s is " + str(totalHandScore))
 
     if threeValue is not None:
         totalHandScore += 6
-        print("3 " + threeValue + "s is " + str(totalHandScore))
+        if prints:
+            print("3 " + threeValue + "s is " + str(totalHandScore))
 
     if fourValue is not None:
         totalHandScore += 12
-        print("4 " + fourValue + "s is " + str(totalHandScore))
+        if prints:
+            print("4 " + fourValue + "s is " + str(totalHandScore))
 
     # Runs
     runs = []
@@ -203,7 +222,8 @@ def calculateScore(scoringHand):
                     run.append(l)
 
     for run in runs:
-        print("Run of " + str(len(run)))
+        if prints:
+            print("Run of " + str(len(run)))
         totalHandScore += len(run)
 
     return totalHandScore
