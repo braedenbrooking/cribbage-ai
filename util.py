@@ -1,5 +1,6 @@
 import pydealer
 import copy
+import threading
 
 RANKS = {
     "values": {
@@ -19,6 +20,18 @@ RANKS = {
         "Joker": 0,
     }
 }
+
+class semphoreList:  # A helper class to make working with semaphores easy
+    def __init__(self, start=[]):
+        self.lock = threading.Lock()
+        self.value = start
+    def append(self, dic):
+        self.lock.acquire()
+        try:
+            self.value.append(dic)
+        finally:
+            self.lock.release()
+
 
 
 def checkNobs(cut, card):

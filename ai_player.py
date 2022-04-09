@@ -1,5 +1,6 @@
 import pydealer
 import copy
+import threading
 from player import Player
 from game_state import GameState
 from util import *
@@ -17,7 +18,7 @@ class PlayerAI(Player):
             for chosenCard in chosenCards:
                 print("AI Player discards " + str(chosenCard))  # TODO When we are finished obviously we shouldn't print out what the AI does
                 crib.add(self.hand.get(str(chosenCard)))
-                self.cardsPutInCrib.add((chosenCard)) #TODO check this
+                self.cardsPutInCrib.add((chosenCard))
         return crib
 
     # Play a card automagically
@@ -45,70 +46,90 @@ class PlayerAI(Player):
         return sumOnTable
 
     def discardByUtility(self):
+        utilities = semphoreList()
         bestScore = -999999
         bestCards = []
         deck = pydealer.Deck()
         deck.get_list([str(x) for x in self.hand[:]])  # Removes the cards in hand from the deck
+
+        threads = []
+
         for i in range(len(self.hand)-1):
             for j in range(i, len(self.hand)-1):
-                potentialHandPoints = {}
-                potentialCribPoints = {}
-
                 tempHand = copy.deepcopy(self.hand)  # For Safety
                 card1 = tempHand.get(i)[0]
                 card2 = tempHand.get(j)[0]
-                cards = [card1, card2]
 
-                guaranteedHandPts = calculateScore(tempHand)
+                t = threading.Thread(target=self.calculateUtility, args=(card1,card2,tempHand,deck,utilities))
+                t.start()
+                threads.append(t)
 
-                guaranteedCribPts = calculateTwoCardsPoints(card1, card2)
-                if not self.myCrib():
-                    guaranteedCribPts= guaranteedCribPts * -1
+        mainThread = threading.current_thread()
+        for t in threads:
+            if t is not mainThread:
+                t.join()
 
-                for possibleCut in deck:
-                    scoreValue = calculateScore(tempHand, possibleCut)
-                    if scoreValue in potentialHandPoints.keys():
-                        potentialHandPoints[scoreValue] += 1
-                    else:
-                        potentialHandPoints[scoreValue] = 1
-
-                deckList = deck[:]
-                # I know this could be more efficient by not checking certain pairs that the optimal player would likely never throw away (ex 2 5s)
-                for k in range(len(deckList)-2):
-                    for l in range(k+1, len(deckList)-1):
-                        for m in range(l+1, len(deckList)):
-                            tempStack = pydealer.Stack()
-                            tempStack.add(deckList[k])
-                            tempStack.add(deckList[l])
-                            tempStack.add(card1)
-                            tempStack.add(card2)
-                            cribScoreValue = calculateScore(tempStack, deckList[m])
-                            if cribScoreValue in potentialCribPoints.keys():
-                                potentialCribPoints[cribScoreValue] += 1
-                            else:
-                                potentialCribPoints[cribScoreValue] = 1
-
-                potentialHandScore = 0
-                for score in potentialHandPoints.keys():
-                    potentialHandScore += score * (potentialHandPoints[score]/len(deckList))
-
-                potentialCribScore = 0
-                for score in potentialCribPoints.keys():
-                    potentialCribScore += (score * (potentialCribPoints[score]/15180))  # (52-6) choose 3
-
-                if not self.myCrib():
-                    potentialCribScore = potentialCribScore * -1
-
-                utilityScore = guaranteedHandPts + guaranteedCribPts + potentialHandScore + potentialCribScore
-                if bestScore < utilityScore:
-                    bestScore = utilityScore
-                    bestCards = cards
+        for elem in utilities.value:
+            if elem["score"] > bestScore:
+                bestScore = elem["score"]
+                bestCards = elem["cards"]
 
         return bestCards
+
+    def calculateUtility(self, card1, card2, hand, deck, utilityList):
+        potentialHandPoints = {}
+        potentialCribPoints = {}
+        guaranteedHandPts = calculateScore(hand)
+
+        guaranteedCribPts = calculateTwoCardsPoints(card1, card2)
+        if not self.myCrib():
+            guaranteedCribPts = guaranteedCribPts * -1
+
+        for possibleCut in deck:
+            scoreValue = calculateScore(hand, possibleCut)
+            if scoreValue in potentialHandPoints.keys():
+                potentialHandPoints[scoreValue] += 1
+            else:
+                potentialHandPoints[scoreValue] = 1
+
+        deckList = deck[:]
+        # I know this could be more efficient by not checking certain pairs that the optimal player would likely never throw away (ex 2 5s)
+        for k in range(len(deckList) - 2):
+            for l in range(k + 1, len(deckList) - 1):
+                for m in range(l + 1, len(deckList)):
+                    tempStack = pydealer.Stack()
+                    tempStack.add(deckList[k])
+                    tempStack.add(deckList[l])
+                    tempStack.add(card1)
+                    tempStack.add(card2)
+                    cribScoreValue = calculateScore(tempStack, deckList[m])
+                    if cribScoreValue in potentialCribPoints.keys():
+                        potentialCribPoints[cribScoreValue] += 1
+                    else:
+                        potentialCribPoints[cribScoreValue] = 1
+
+        potentialHandScore = 0
+        for score in potentialHandPoints.keys():
+            potentialHandScore += score * (potentialHandPoints[score] / len(deckList))
+
+        potentialCribScore = 0
+        for score in potentialCribPoints.keys():
+            potentialCribScore += (score * (potentialCribPoints[score] / 15180))  # (52-6) choose 3
+
+        if not self.myCrib():
+            potentialCribScore = potentialCribScore * -1
+
+        utilityScore = guaranteedHandPts + guaranteedCribPts + potentialHandScore + potentialCribScore
+        cards = [card1, card2]
+        utilityList.append({"score": utilityScore, "cards": cards})
+
+
+
 
 
     # Use AI method to pick cards to discard
     # return: the cards to discard
+    #TODO Do we still need this?
     def pickDiscard(self, crib):
         # Use BFS to determine if it's possible to reach goal state (15 sum)
         cardsToDiscard = self.canDiscardFifteen()
