@@ -42,6 +42,7 @@ class Player:
     def deal6(self, deck):
         self.hand = deck.deal(6)
         self.hand.sort(RANKS)
+        self.copyHand()
 
     def checkVictory(self):
         if self.getScore() >= 120:
@@ -69,10 +70,7 @@ class Player:
         return crib
 
     def copyHand(self):
-        handAsList = self.hand[:]
-        self.handCopy = pydealer.Stack()
-        for card in handAsList:
-            self.handCopy.add(card)
+        self.handCopy = copy.deepcopy(self.hand)
 
     def mustGo(self, sumOnTable):
         for card in self.handCopy:

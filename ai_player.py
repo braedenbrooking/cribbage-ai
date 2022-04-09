@@ -12,11 +12,12 @@ class PlayerAI(Player):
     # Pick a card to discard automagically
     def discardPrompt(self, crib):
         while self.hand.size > 4:
-            chosenCards = self.pickDiscard(crib)
+            #chosenCards = self.pickDiscard(crib)
+            chosenCards = self.discardByUtility()
             for chosenCard in chosenCards:
-                print("AI Player discards " + chosenCard)  # TODO When we are finished obviously we shouldn't print out what the AI does
-                crib.add(self.hand.get(chosenCard))
-                self.cardsPutInCrib.add(chosenCard)
+                print("AI Player discards " + str(chosenCard))  # TODO When we are finished obviously we shouldn't print out what the AI does
+                crib.add(self.hand.get(str(chosenCard)))
+                self.cardsPutInCrib.add((chosenCard)) #TODO check this
         return crib
 
     # Play a card automagically
@@ -48,14 +49,14 @@ class PlayerAI(Player):
         bestCards = []
         deck = pydealer.Deck()
         deck.get_list([str(x) for x in self.hand[:]])  # Removes the cards in hand from the deck
-        for i in range(len(self.hand)):
-            for j in range(i+1, len(self.hand)):
+        for i in range(len(self.hand)-1):
+            for j in range(i, len(self.hand)-1):
                 potentialHandPoints = {}
                 potentialCribPoints = {}
 
                 tempHand = copy.deepcopy(self.hand)  # For Safety
-                card1 = tempHand.pop(i)
-                card2 = tempHand.pop(j-1)
+                card1 = tempHand.get(i)[0]
+                card2 = tempHand.get(j)[0]
                 cards = [card1, card2]
 
                 guaranteedHandPts = calculateScore(tempHand)
@@ -73,8 +74,8 @@ class PlayerAI(Player):
 
                 deckList = deck[:]
                 # I know this could be more efficient by not checking certain pairs that the optimal player would likely never throw away (ex 2 5s)
-                for k in range(len(deckList)):
-                    for l in range(k+1, len(deckList)):
+                for k in range(len(deckList)-2):
+                    for l in range(k+1, len(deckList)-1):
                         for m in range(l+1, len(deckList)):
                             tempStack = pydealer.Stack()
                             tempStack.add(deckList[k])
@@ -96,7 +97,7 @@ class PlayerAI(Player):
                     potentialCribScore += (score * (potentialCribPoints[score]/15180))  # (52-6) choose 3
 
                 if not self.myCrib():
-                    guaranteedCribScore = guaranteedCribScore * -1
+                    potentialCribScore = potentialCribScore * -1
 
                 utilityScore = guaranteedHandPts + guaranteedCribPts + potentialHandScore + potentialCribScore
                 if bestScore < utilityScore:

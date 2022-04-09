@@ -104,29 +104,16 @@ def convertCardToInt(value):
 def calculateTwoCardsPoints(card1, card2):
     if card1.value == card2.value:
         return 2
-    elif convertCardToInt(card1) + convertCardToInt(card2) == 15:
+    elif convertCardToInt(card1.value) + convertCardToInt(card2.value) == 15:
         return 2
     else:
         return 0
 
-def calculateScore(scoringHand, cutCard, prints=False):
-    scoringHand2 = copy.deepcopy(scoringHand)  # For Safety
-    scoringHand2.add(cutCard)
-
-    totalHandScore = calculateScore(scoringHand2)
-
-    # Nobs (The right jack)
-    if cutCard is not None:
-        for card in scoringHand:
-            if card != cutCard and checkNobs(cutCard, card):
-                totalHandScore += 1
-                if prints:
-                    print("The right Jack (nobs) is" + str(totalHandScore))
-    return totalHandScore
-
-
-def calculateScore(scoringHand, prints=False):
+def calculateScore(scoringHand, cutCard=None, prints=False):
     scoringHand = copy.deepcopy(scoringHand)  # For Safety
+    if cutCard is not None:
+        scoringHand.add(cutCard)
+
     totalHandScore = 0
 
     # Flush
@@ -224,4 +211,11 @@ def calculateScore(scoringHand, prints=False):
             print("Run of " + str(len(run)))
         totalHandScore += len(run)
 
+    # Nobs (The right jack)
+    if cutCard is not None:
+        for card in scoringHand:
+            if card != cutCard and checkNobs(cutCard, card):
+                totalHandScore += 1
+                if prints:
+                    print("The right Jack (nobs) is" + str(totalHandScore))
     return totalHandScore

@@ -18,12 +18,6 @@ class GameState:
 
     def __init__(self, p1: Player, ai: Player):  # Used to start a game
         self.players = [p1, ai]
-        self.deck = pydealer.Deck()
-        self.deck.shuffle()
-        p1.deal6(self.deck)
-        ai.deal6(self.deck)
-        self.aiHand = ai.getHand()
-        self.playerHand = p1.getHand()
         if random.randint(0, 1):  # Reverses the starting crib 50% of the time
             p1.setmyCrib(True)
         else:
@@ -91,14 +85,14 @@ class GameState:
 
     def layCards(self):
         p1 = self.players[0]
-        p2 = self.players[1]  # We can change this to be called ai if you want
+        p2 = self.players[1]  # We can change this to be called ai if you want but I was lazy
+
         # current is the index of the current player in the players and playerGo lists
         # this way, the same code doesn't have to be explicitly written for each player
         current = not p1.myCrib()  # Needs to start reversed
-        #players = [p1, p2]
         playerGo = [False, False]
         sumOnTable = 0
-        cardsOnTable = pydealer.Stack()
+        self.cardsOnTable = pydealer.Stack()
         while p1.cardsRemaining() > 0 or p2.cardsRemaining() > 0:
             current = not current
             newSumOnTable = 0
@@ -107,7 +101,7 @@ class GameState:
                 playerGo[current] = True
 
             if not playerGo[current]:
-                newSumOnTable = self.players[current].promptToPlay(cardsOnTable, sumOnTable)
+                newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
                 if newSumOnTable == sumOnTable:
                     print("Player " + str(current + 1) + " says go")
                     if playerGo[not current]:
@@ -127,7 +121,7 @@ class GameState:
 
             if all(playerGo):  # Resets
                 sumOnTable = 0
-                cardsOnTable.empty()
+                self.cardsOnTable.empty()
                 playerGo = [False, False]
 
         print("Last card played")
@@ -145,6 +139,12 @@ class GameState:
         p1 = self.players[0]
         ai = self.players[1]
         while True:
+            self.deck = pydealer.Deck()
+            self.deck.shuffle()
+            p1.deal6(self.deck)
+            ai.deal6(self.deck)
+            self.aiHand = ai.getHand()
+            self.playerHand = p1.getHand()
             self.printScore()
 
             self.crib = pydealer.Stack()
