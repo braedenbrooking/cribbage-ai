@@ -1,6 +1,5 @@
 import pydealer
 from util import *
-from game_state import GameState
 
 
 class Player:

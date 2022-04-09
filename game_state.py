@@ -1,6 +1,6 @@
 from urllib.request import AbstractBasicAuthHandler
 import pydealer
-import player
+from player import Player
 import random
 from util import *
 
@@ -16,7 +16,7 @@ class GameState:
     deck = None
     dealer = None
 
-    def __init__(self, p1: player.Player, ai: player.Player):  # Used to start a game
+    def __init__(self, p1: Player, ai: Player):  # Used to start a game
         self.players = [p1, ai]
         self.deck = pydealer.Deck()
         self.deck.shuffle()
@@ -32,6 +32,7 @@ class GameState:
         for p in self.players:
             p.setGameState(self)
 
+    """ #TIL Python does not support multiple constructors
     def __init__(self, deck, player, ai, table, discard, cutCard, crib):  # Used by ai when looking at possible futures
         self.deck = deck
         self.playerHand = player
@@ -40,6 +41,7 @@ class GameState:
         self.discardPile = discard
         self.cutCard = cutCard
         self.crib = crib
+    """
 
     # returns a new state with this state as the base
     def playCard(self, card, isAiPlayer):
@@ -166,10 +168,10 @@ class GameState:
             self.dealer = not self.dealer
 
     # Gamestate Print functions below here
-    def printScore(self, p1, ai):
+    def printScore(self):
         print("==CURRENT SCORE==")
-        print(p1.getName() + ": " + str(p1.getScore()))
-        print(ai.getName() + ": " + str(ai.getScore()))
+        print(self.players[0].getName() + ": " + str(self.players[0].getScore()))
+        print(self.players[1].getName() + ": " + str(self.players[1].getScore()))
         print("=================")
         print()
 

@@ -1,11 +1,11 @@
 import pydealer
 import copy
-import player
+from player import Player
 from game_state import GameState
 from util import *
 
 # Use AB pruning tree to determine what cards to discard and what cards to play
-class PlayerAI(player.Player):
+class PlayerAI(Player):
 
     cardsPutInCrib = pydealer.Stack()  # Used later so we remember what we discarded
 
@@ -93,7 +93,7 @@ class PlayerAI(player.Player):
 
                 potentialCribScore = 0
                 for score in potentialCribPoints.keys():
-                    potentialCribScore += score * (potentialCribPoints[score]/1035)  # (52-6) choose 2
+                    potentialCribScore += (score * (potentialCribPoints[score]/15180))  # (52-6) choose 3
 
                 if not self.myCrib():
                     guaranteedCribScore = guaranteedCribScore * -1
