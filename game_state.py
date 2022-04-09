@@ -22,7 +22,9 @@ class GameState:
             p1.setmyCrib(True)
         else:
             ai.setmyCrib(True)
-        self.dealer = ai.myCrib()  # index of the player with the crib in the players list
+        self.dealer = (
+            ai.myCrib()
+        )  # index of the player with the crib in the players list
         for p in self.players:
             p.setGameState(self)
 
@@ -36,6 +38,10 @@ class GameState:
         self.cutCard = cutCard
         self.crib = crib
     """
+
+    # Set player's hand (used only for minimax, use this on a copy of the object)
+    def setPlayerHand(self, hand):
+        self.playerHand = hand
 
     # returns a new state with this state as the base
     def playCard(self, card, isAiPlayer):
@@ -52,7 +58,15 @@ class GameState:
         # Add the new card to the top of the table pile
         newTable.add(card)
 
-        return GameState(self.deck, newPlayerHand, newAiHand, newTable, self.discardPile, self.cutCard, self.crib)
+        return GameState(
+            self.deck,
+            newPlayerHand,
+            newAiHand,
+            newTable,
+            self.discardPile,
+            self.cutCard,
+            self.crib,
+        )
 
     # type: "player", "ai", "table"
     def copyStack(self, type):
@@ -85,7 +99,9 @@ class GameState:
 
     def layCards(self):
         p1 = self.players[0]
-        p2 = self.players[1]  # We can change this to be called ai if you want but I was lazy
+        p2 = self.players[
+            1
+        ]  # We can change this to be called ai if you want but I was lazy
 
         # current is the index of the current player in the players and playerGo lists
         # this way, the same code doesn't have to be explicitly written for each player
@@ -101,7 +117,9 @@ class GameState:
                 playerGo[current] = True
 
             if not playerGo[current]:
-                newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
+                newSumOnTable = self.players[current].promptToPlay(
+                    self.cardsOnTable, sumOnTable
+                )
                 if newSumOnTable == sumOnTable:
                     print("Player " + str(current + 1) + " says go")
                     if playerGo[not current]:
@@ -129,11 +147,10 @@ class GameState:
 
         return False  # returns false if no one has claimed victory
 
-    #Updates variables based on the players
+    # Updates variables based on the players
     def update(self):
         self.playerHand = self.players[0].getHand()
         self.aiHand = self.players[1].getHand()
-
 
     def gameFlow(self):
         p1 = self.players[0]
@@ -179,4 +196,3 @@ class GameState:
         print("===")
         print("The cut card is: " + str(self.cutCard))
         print("===")
-

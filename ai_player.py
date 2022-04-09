@@ -13,10 +13,11 @@ class PlayerAI(Player):
     # Pick a card to discard automagically
     def discardPrompt(self, crib):
         while self.hand.size > 4:
-            #chosenCards = self.pickDiscard(crib)
+            # chosenCards = self.pickDiscard(crib)
             chosenCards = self.discardByUtility()
             for chosenCard in chosenCards:
-                print("AI Player discards " + str(chosenCard))  # TODO When we are finished obviously we shouldn't print out what the AI does
+                # TODO When we are finished obviously we shouldn't print out what the AI does
+                print("AI Player discards " + str(chosenCard))
                 crib.add(self.hand.get(str(chosenCard)))
                 self.cardsPutInCrib.add((chosenCard))
         return crib
@@ -50,17 +51,21 @@ class PlayerAI(Player):
         bestScore = -999999
         bestCards = []
         deck = pydealer.Deck()
-        deck.get_list([str(x) for x in self.hand[:]])  # Removes the cards in hand from the deck
+        # Removes the cards in hand from the deck
+        deck.get_list([str(x) for x in self.hand[:]])
 
         threads = []
 
-        for i in range(len(self.hand)-1):
-            for j in range(i, len(self.hand)-1):
+        for i in range(len(self.hand) - 1):
+            for j in range(i, len(self.hand) - 1):
                 tempHand = copy.deepcopy(self.hand)  # For Safety
                 card1 = tempHand.get(i)[0]
                 card2 = tempHand.get(j)[0]
 
-                t = threading.Thread(target=self.calculateUtility, args=(card1,card2,tempHand,deck,utilities))
+                t = threading.Thread(
+                    target=self.calculateUtility,
+                    args=(card1, card2, tempHand, deck, utilities),
+                )
                 t.start()
                 threads.append(t)
 
@@ -114,22 +119,25 @@ class PlayerAI(Player):
 
         potentialCribScore = 0
         for score in potentialCribPoints.keys():
-            potentialCribScore += (score * (potentialCribPoints[score] / 15180))  # (52-6) choose 3
+            potentialCribScore += score * (
+                potentialCribPoints[score] / 15180
+            )  # (52-6) choose 3
 
         if not self.myCrib():
             potentialCribScore = potentialCribScore * -1
 
-        utilityScore = guaranteedHandPts + guaranteedCribPts + potentialHandScore + potentialCribScore
+        utilityScore = (
+            guaranteedHandPts
+            + guaranteedCribPts
+            + potentialHandScore
+            + potentialCribScore
+        )
         cards = [card1, card2]
         utilityList.append({"score": utilityScore, "cards": cards})
 
-
-
-
-
     # Use AI method to pick cards to discard
     # return: the cards to discard
-    #TODO Do we still need this?
+    # TODO Do we still need this?
     def pickDiscard(self, crib):
         # Use BFS to determine if it's possible to reach goal state (15 sum)
         cardsToDiscard = self.canDiscardFifteen()
@@ -142,7 +150,6 @@ class PlayerAI(Player):
         # Can't make 15, use a performance measure to pick 2 cards
         else:
             return self.bestTwoToDiscard()
-
 
     # Use performance measure to pick worst 2 cards in hand
     def bestTwoToDiscard(self):
@@ -198,7 +205,6 @@ class PlayerAI(Player):
         scoredHand.sort(key=lambda y: y[1])
         return scoredHand[0:2]
 
-
     # Possible to discard 2 to make 15? Use BFS search
     def canDiscardFifteen(self):
         handAsList = self.hand[:]
@@ -232,7 +238,6 @@ class PlayerAI(Player):
 
         return -1
 
-
     # Use AB pruning tree to play a card
     # return: the card to play
     def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
@@ -247,10 +252,21 @@ class PlayerAI(Player):
         # i.e. use the game_state constructor
         currentState = copy.deepcopy(self.gameStateRef)
 
+        # Use the whole deck that the AI doesn't have as the player's prospective hand
+        # i.e. assume the player will always be able to counter with the best move
+        deck = pydealer.Deck()
+        # Removes the cards in hand from the deck
+        deck.get_list([str(x) for x in self.hand[:]])
+
+        remainderStack = pydealer.Stack()
+        for card in deck:
+            remainderStack.add(card)
+
+        currentState.setPlayerHand(remainderStack)
+
         # Current depth is 2, maybe change later?
         cardToPlay = self.minimax(currentState, None, 2, True)
         return cardToPlay[1]
-
 
     # Find the best card to play for the AI
     # Parameters:
