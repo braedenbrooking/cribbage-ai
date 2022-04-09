@@ -119,9 +119,7 @@ class PlayerAI(Player):
 
         potentialCribScore = 0
         for score in potentialCribPoints.keys():
-            potentialCribScore += score * (
-                potentialCribPoints[score] / 15180
-            )  # (52-6) choose 3
+            potentialCribScore += score * (potentialCribPoints[score] / 15180)  # (52-6) choose 3
 
         if not self.myCrib():
             potentialCribScore = potentialCribScore * -1

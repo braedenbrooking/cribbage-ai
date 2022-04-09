@@ -22,9 +22,7 @@ class GameState:
             p1.setmyCrib(True)
         else:
             ai.setmyCrib(True)
-        self.dealer = (
-            ai.myCrib()
-        )  # index of the player with the crib in the players list
+        self.dealer = ai.myCrib() # index of the player with the crib in the players list
         for p in self.players:
             p.setGameState(self)
 
@@ -99,9 +97,7 @@ class GameState:
 
     def layCards(self):
         p1 = self.players[0]
-        p2 = self.players[
-            1
-        ]  # We can change this to be called ai if you want but I was lazy
+        p2 = self.players[1]  # We can change this to be called ai if you want but I was lazy
 
         # current is the index of the current player in the players and playerGo lists
         # this way, the same code doesn't have to be explicitly written for each player
@@ -117,9 +113,7 @@ class GameState:
                 playerGo[current] = True
 
             if not playerGo[current]:
-                newSumOnTable = self.players[current].promptToPlay(
-                    self.cardsOnTable, sumOnTable
-                )
+                newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
                 if newSumOnTable == sumOnTable:
                     print("Player " + str(current + 1) + " says go")
                     if playerGo[not current]:
