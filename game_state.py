@@ -16,30 +16,35 @@ class GameState:
     deck = None
     dealer = None
 
-    def __init__(self, p1: Player, ai: Player):  # Used to start a game
-        self.players = [p1, ai]
-        if random.randint(0, 1):  # Reverses the starting crib 50% of the time
-            p1.setmyCrib(True)
-        else:
-            ai.setmyCrib(True)
-        self.dealer = ai.myCrib() # index of the player with the crib in the players list
-        for p in self.players:
-            p.setGameState(self)
-
-    """ #TIL Python does not support multiple constructors
-    def __init__(self, deck, player, ai, table, discard, cutCard, crib):  # Used by ai when looking at possible futures
-        self.deck = deck
-        self.playerHand = player
-        self.aiHand = ai
-        self.cardsOnTable = table
-        self.discardPile = discard
-        self.cutCard = cutCard
-        self.crib = crib
-    """
+    def __init__(self, copy, p1: Player, ai: Player):
+        if copy == None:  # Used to start a game
+            self.players = [p1, ai]
+            if random.randint(0, 1):  # Reverses the starting crib 50% of the time
+                p1.setmyCrib(True)
+            else:
+                ai.setmyCrib(True)
+            self.dealer = ai.myCrib() # index of the player with the crib in the players list
+            for p in self.players:
+                p.setGameState(self)
+        else:  # Used by ai to predict possible futures
+            self.playerHand = copy[0]
+            self.aiHand = copy[1]
+            self.cardsOnTable = copy[2]
+            self.discardPile = copy[3]
+            self.cutCard = copy[4]
+            self.crib = copy[5]
+            self.deck = copy[6]
 
     # Set player's hand (used only for minimax, use this on a copy of the object)
     def setPlayerHand(self, hand):
         self.playerHand = hand
+    
+    def setAIHand(self, playable):
+        newHand = pydealer.Stack()
+        for card in playable:
+            newHand.add(card)
+        self.aiHand = newHand
+
 
     # returns a new state with this state as the base
     def playCard(self, card, isAiPlayer):
@@ -56,7 +61,7 @@ class GameState:
         # Add the new card to the top of the table pile
         newTable.add(card)
 
-        return GameState(
+        return GameState([
             self.deck,
             newPlayerHand,
             newAiHand,
@@ -64,33 +69,31 @@ class GameState:
             self.discardPile,
             self.cutCard,
             self.crib,
-        )
+        ], None, None)
 
     # type: "player", "ai", "table"
     def copyStack(self, type):
-        stackAsList = None
-
-        if type == "player":
-            stackAsList = self.playerHand[:]
-        if type == "ai":
-            stackAsList = self.aiHand[:]
-        if type == "table":
-            stackAsList = self.cardsOnTable[:]
-
+        stackAsList = self.StackToList(type)
         copiedHand = pydealer.Stack()
         for card in stackAsList:
             copiedHand.add(card)
         return copiedHand
+    
+    def StackToList(self, type):
+        if type == "player":
+            return self.playerHand[:]
+        if type == "ai":
+            return self.aiHand[:]
+        if type == "table":
+            return self.cardsOnTable[:]
+        else: return
 
     # Score the state of this state for the AI
-    def scoreForAI(self):
+    def score(self):
+        aiHandCopy = self.copyStack("ai")
         if self.cutCard is not None:
-            aiHandCopy = self.copyStack("ai")
             aiHandCopy.add(self.cutCard)
-            return calculateScore(aiHandCopy)
-        else:
-            newStack = pydealer.Stack(self.copyStack("ai"))
-            return calculateScore(self.copyStack("ai"))
+        return calculateScore(aiHandCopy)
 
     def cutTheDeck(self, deck):
         return deck.deal(1)[0]

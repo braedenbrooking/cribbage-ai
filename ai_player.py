@@ -38,7 +38,7 @@ class PlayerAI(Player):
         if len(playableCards) == 0:
             return
 
-        card = self.pickPlay(playableCards, cardsOnTable, sumOnTable)
+        card = self.pickPlay(playableCards)
         cardValue = convertCardToInt(card.value)
 
         sumOnTable += cardValue
@@ -238,7 +238,7 @@ class PlayerAI(Player):
 
     # Use AB pruning tree to play a card
     # return: the card to play
-    def pickPlay(self, playableCards, cardsOnTable, sumOnTable):
+    def pickPlay(self, playableCards):
         # Placeholder
         # strategy:
         #   maximize 15s for self, minimize 15s for adversary
@@ -254,23 +254,26 @@ class PlayerAI(Player):
         # i.e. assume the player will always be able to counter with the best move
         deck = pydealer.Deck()
         # Removes the cards in hand from the deck
-        deck.get_list([str(x) for x in self.hand[:]])
+        deck.get_list([str(x) for x in currentState.StackToList("ai")])
+        deck.get_list([str(x) for x in currentState.StackToList("table")])
+        deck.get_list([str(x) for x in self.cardsPutInCrib[:]])
 
         remainderStack = pydealer.Stack()
         for card in deck:
             remainderStack.add(card)
 
         currentState.setPlayerHand(remainderStack)
+        currentState.setAIHand(playableCards)
 
-        # Current depth is 2, maybe change later?
-        cardToPlay = self.minimax(currentState, None, 2, True)
+        # Current depth is 3, maybe change later?
+        cardToPlay = self.minimax(currentState, None, 3, True)
         return cardToPlay[1]
 
     # Find the best card to play for the AI
     # Parameters:
     #   node             = the current node to score
     #   cardPlayed       = the card played during this turn
-    #   depth            = how many turns ahead we want to check. Depth of 2 = bot turn, player turn, bot turn
+    #   depth            = how many turns ahead we want to check. Depth of 3 = bot turn, player turn, bot turn
     #   maximizingPlayer = True if it's the bot's turn, otherwise false
     # Return:
     #   a tuple (score, card) representing what score is expected by playing the best card and what card that is
@@ -285,7 +288,9 @@ class PlayerAI(Player):
             # Value tuple follows same format as return tuple
             value = (-1 * float("inf"), None)
 
-            handAsList = self.hand[:]
+            # TODO: cards need to be removed from this temp hand when played; dont copy actual hand every time
+            #! now hand is taken from the node. this SHOULD be accurate i believe?
+            handAsList = node.StackToList("ai")
 
             # Play optimally, picking the card that results in the greatest "score"
             # for the CPU
@@ -298,7 +303,7 @@ class PlayerAI(Player):
 
                 # Maximize
                 if childValue[0] > value[0]:
-                    value = childValue
+                    value = (childValue[0], card)
             return value
 
         else:
@@ -308,8 +313,8 @@ class PlayerAI(Player):
             # TODO: Placeholder, in reality, will need to find out what to put for the real player's hand...
             #       i.e. replace this with something. Should the bot "know" the player's actual hand to
             #       make it seem like a better opponent?
-            realPlayerHand = self.hand
-            handAsList = realPlayerHand[:]
+            #! this should work but is also EXTREMELY big
+            handAsList = node.StackToList("player")
 
             # Assuming the player plays optimally, and picks the card that results
             # in lowest "score" for the CPU
@@ -322,5 +327,7 @@ class PlayerAI(Player):
 
                 # Minimize
                 if childValue[0] < value[0]:
-                    value = childValue
+                    value = (childValue[0], card)
             return value
+
+

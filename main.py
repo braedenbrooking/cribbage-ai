@@ -6,7 +6,7 @@ from game_state import GameState
 def main():
     p1 = Player("Player 1")
     ai = PlayerAI("AI")
-    gs = GameState(p1, ai)
+    gs = GameState(None, p1, ai)
     gs.gameFlow()
 
 
