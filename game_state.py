@@ -16,24 +16,15 @@ class GameState:
     deck = None
     dealer = None
 
-    def __init__(self, copy, p1: Player, ai: Player):
-        if copy == None:  # Used to start a game
-            self.players = [p1, ai]
-            if random.randint(0, 1):  # Reverses the starting crib 50% of the time
-                p1.setmyCrib(True)
-            else:
-                ai.setmyCrib(True)
-            self.dealer = ai.myCrib() # index of the player with the crib in the players list
-            for p in self.players:
-                p.setGameState(self)
-        else:  # Used by ai to predict possible futures
-            self.playerHand = copy[0]
-            self.aiHand = copy[1]
-            self.cardsOnTable = copy[2]
-            self.discardPile = copy[3]
-            self.cutCard = copy[4]
-            self.crib = copy[5]
-            self.deck = copy[6]
+    def __init__(self, p1: Player, ai: Player):
+        self.players = [p1, ai]
+        if random.randint(0, 1):  # Reverses the starting crib 50% of the time
+            p1.setmyCrib(True)
+        else:
+            ai.setmyCrib(True)
+        self.dealer = ai.myCrib() # index of the player with the crib in the players list
+        for p in self.players:
+            p.setGameState(self)
 
     # Set player's hand (used only for minimax, use this on a copy of the object)
     def setPlayerHand(self, hand):
@@ -45,6 +36,19 @@ class GameState:
             newHand.add(card)
         self.aiHand = newHand
 
+    # Creates a copy of its self modified with the attributes given; Used by ai to predict possible futures
+    def createModCopy(self, newPlayers=None, newDeck=None, newPlayerHand=None, newAiHand=None, newCardsOnTable=None, newDiscardPile=None, newCutCard=None, newCrib=None, newDealer=None):
+        stateCopy = copy.deepcopy(self)
+        stateCopy.players = newPlayers if newPlayers is not None else stateCopy.players
+        stateCopy.deck = newDeck if newDeck is not None else stateCopy.deck
+        stateCopy.playerHand = newPlayerHand if newPlayerHand is not None else stateCopy.playerHand
+        stateCopy.aiHand = newAiHand if newAiHand is not None else stateCopy.aiHand
+        stateCopy.cardsOnTable = newCardsOnTable if newCardsOnTable is not None else stateCopy.cardsOnTable
+        stateCopy.discardPile = newDiscardPile if newDiscardPile is not None else stateCopy.discardPile
+        stateCopy.cutCard = newCutCard if newCutCard is not None else stateCopy.cutCard
+        stateCopy.crib = newCrib if newCrib is not None else stateCopy.crib
+        stateCopy.dealer = newDealer if newDealer is not None else stateCopy.dealer
+        return stateCopy
 
     # returns a new state with this state as the base
     def playCard(self, card, isAiPlayer):
@@ -61,15 +65,11 @@ class GameState:
         # Add the new card to the top of the table pile
         newTable.add(card)
 
-        return GameState([
-            self.deck,
-            newPlayerHand,
-            newAiHand,
-            newTable,
-            self.discardPile,
-            self.cutCard,
-            self.crib,
-        ], None, None)
+        return self.createModCopy(
+            newPlayerHand=newPlayerHand,
+            newAiHand=newAiHand,
+            newCardsOnTable=newTable
+        )
 
     # type: "player", "ai", "table"
     def copyStack(self, type):
