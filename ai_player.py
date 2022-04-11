@@ -87,8 +87,6 @@ class PlayerAI(Player):
         guaranteedHandPts = calculateScore(hand)
 
         guaranteedCribPts = calculateTwoCardsPoints(card1, card2)
-        if not self.myCrib():
-            guaranteedCribPts = guaranteedCribPts * -1
 
         for possibleCut in deck:
             scoreValue = calculateScore(hand, possibleCut)
@@ -115,14 +113,15 @@ class PlayerAI(Player):
 
         potentialHandScore = 0
         for score in potentialHandPoints.keys():
-            potentialHandScore += score * (potentialHandPoints[score] / len(deckList))
+            potentialHandScore += (score-guaranteedHandPts) * (potentialHandPoints[score] / len(deckList))
 
         potentialCribScore = 0
         for score in potentialCribPoints.keys():
-            potentialCribScore += score * (potentialCribPoints[score] / 15180)  # (52-6) choose 3
+            potentialCribScore += (score-guaranteedCribPts) * (potentialCribPoints[score] / 15180)  # (52-6) choose 3
 
         if not self.myCrib():
             potentialCribScore = potentialCribScore * -1
+            guaranteedCribPts = guaranteedCribPts * -1
 
         utilityScore = (
             guaranteedHandPts
