@@ -20,6 +20,7 @@ class PlayerAI(Player):
                 print("AI Player discards " + str(chosenCard))
                 crib.add(self.hand.get(str(chosenCard)))
                 self.cardsPutInCrib.add((chosenCard))
+        self.handCopy = copy.deepcopy(self.hand)
         return crib
 
     # Play a card automagically
@@ -47,14 +48,12 @@ class PlayerAI(Player):
         return sumOnTable
 
     def discardByUtility(self):
-        utilities = semphoreList()
+        utilities = []
         bestScore = -999999
         bestCards = []
         deck = pydealer.Deck()
         # Removes the cards in hand from the deck
         deck.get_list([str(x) for x in self.hand[:]])
-
-        threads = []
 
         for i in range(len(self.hand) - 1):
             for j in range(i, len(self.hand) - 1):
@@ -62,19 +61,9 @@ class PlayerAI(Player):
                 card1 = tempHand.get(i)[0]
                 card2 = tempHand.get(j)[0]
 
-                t = threading.Thread(
-                    target=self.calculateUtility,
-                    args=(card1, card2, tempHand, deck, utilities),
-                )
-                t.start()
-                threads.append(t)
+                self.calculateUtility(card1, card2, tempHand, deck, utilities)
 
-        mainThread = threading.current_thread()
-        for t in threads:
-            if t is not mainThread:
-                t.join()
-
-        for elem in utilities.value:
+        for elem in utilities:#.value:
             if elem["score"] > bestScore:
                 bestScore = elem["score"]
                 bestCards = elem["cards"]
@@ -83,7 +72,7 @@ class PlayerAI(Player):
 
     def calculateUtility(self, card1, card2, hand, deck, utilityList):
         potentialHandPoints = {}
-        potentialCribPoints = {}
+        potentialCribPoints = semaphoreDict()
         guaranteedHandPts = calculateScore(hand)
 
         guaranteedCribPts = calculateTwoCardsPoints(card1, card2)
@@ -106,18 +95,15 @@ class PlayerAI(Player):
                     tempStack.add(card1)
                     tempStack.add(card2)
                     cribScoreValue = calculateScore(tempStack, deckList[m])
-                    if cribScoreValue in potentialCribPoints.keys():
-                        potentialCribPoints[cribScoreValue] += 1
-                    else:
-                        potentialCribPoints[cribScoreValue] = 1
+                    potentialCribPoints.add(cribScoreValue)
 
         potentialHandScore = 0
         for score in potentialHandPoints.keys():
             potentialHandScore += (score-guaranteedHandPts) * (potentialHandPoints[score] / len(deckList))
 
         potentialCribScore = 0
-        for score in potentialCribPoints.keys():
-            potentialCribScore += (score-guaranteedCribPts) * (potentialCribPoints[score] / 15180)  # (52-6) choose 3
+        for score in potentialCribPoints.value.keys():
+            potentialCribScore += (score-guaranteedCribPts) * (potentialCribPoints.value[score] / 15180)  # (52-6) choose 3
 
         if not self.myCrib():
             potentialCribScore = potentialCribScore * -1
@@ -131,6 +117,8 @@ class PlayerAI(Player):
         )
         cards = [card1, card2]
         utilityList.append({"score": utilityScore, "cards": cards})
+
+
 
     # Use AI method to pick cards to discard
     # return: the cards to discard

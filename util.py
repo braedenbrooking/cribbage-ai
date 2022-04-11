@@ -21,19 +21,6 @@ RANKS = {
     }
 }
 
-class semphoreList:  # A helper class to make working with semaphores easy
-    def __init__(self, start=[]):
-        self.lock = threading.Lock()
-        self.value = start
-    def append(self, dic):
-        self.lock.acquire()
-        try:
-            self.value.append(dic)
-        finally:
-            self.lock.release()
-
-
-
 def checkNobs(cut, card):
     return card.value == "Jack" and cut.suit == card.suit
 
