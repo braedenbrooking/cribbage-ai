@@ -25,7 +25,7 @@ class PlayerAI(Player):
     def promptToPlay(self, cardsOnTable, sumOnTable):
         # Determine the playable cards
         playableCards = []
-        handAsList = self.hand[:]
+        handAsList = self.handCopy[:]
         for card in handAsList:
             cardValue = convertCardToInt(card.value)
             sumIfPlayed = sumOnTable + cardValue
@@ -95,22 +95,6 @@ class PlayerAI(Player):
                 potentialCribPoints[scoreValueCrib] = 1
 
         deckList = deck[:]
-        # I know this could be more efficient by not checking certain pairs that the optimal player would likely never throw away (ex 2 5s)
-        """
-        for k in range(len(deckList) - 2):
-            for l in range(k + 1, len(deckList) - 1):
-                for m in range(l + 1, len(deckList)):
-                    tempStack = pydealer.Stack()
-                    tempStack.add(deckList[k])
-                    tempStack.add(deckList[l])
-                    tempStack.add(card1)
-                    tempStack.add(card2)
-                    cribScoreValue = calculateScore(tempStack, deckList[m])
-                    if cribScoreValue in potentialCribPoints.keys():
-                        potentialCribPoints[cribScoreValue] += 1
-                    else:
-                        potentialCribPoints[cribScoreValue] = 1
-        """
 
         potentialHandScore = 0
         for score in potentialHandPoints.keys():
@@ -136,13 +120,6 @@ class PlayerAI(Player):
     # Use AB pruning tree to play a card
     # return: the card to play
     def pickPlay(self, playableCards):
-        # Placeholder
-        # strategy:
-        #   maximize 15s for self, minimize 15s for adversary
-        #   maximize completing runs, minimize setting up runs
-        #   maximize pairs/triplets etc
-        #   priority: triplets and above > runs > 15s
-
         # i.e. use the game_state constructor
         currentState = copy.deepcopy(self.gameStateRef)
 
@@ -162,9 +139,9 @@ class PlayerAI(Player):
         currentState.setAIHand(playableCards)
 
         # Current depth is 3, maybe change later?
-        cardToPlay = self.minimax(node=currentState, cardPlayed=None, depth=3, maximizingAi=True)
+        cardToPlay = self.alphabeta(node=currentState, cardPlayed=None, depth=3, alpha=float("inf"), beta=float("inf"), maximizingAi=True)
 
-        return cardToPlay[2]
+        return cardToPlay[1]
 
     # Find the best card to play for the AI
     # Parameters:
@@ -174,32 +151,33 @@ class PlayerAI(Player):
     #   maximizingAi = True if it's the bot's turn, otherwise false
     # Return:
     #   a tuple (score, card) representing what score is expected by playing the best card and what card that is
-    def minimax(self, node, cardPlayed, depth, maximizingAi):
-        if depth == 0 or len(self.hand[:]) == 0:  # TODO: potentially need to add: OR node is a terminal node
-            return(node.aiScore, node.playerScore, cardPlayed)
+    def alphabeta(self, node, cardPlayed, depth, alpha, beta, maximizingAi):
+        if depth == 0 or len(self.handCopy[:]) == 0:  # TODO: potentially need to add: OR node is a terminal node
+            return(node.aiScore - node.playerScore, cardPlayed)
 
-
-        value = (-1*float("inf"), float("inf"), None)
         handAsList = node.StackToList("ai") if maximizingAi else node.StackToList("player")
 
-        # 'value' tuple follows same format as return tuple
+        if maximizingAi:
+            value = (-1*float("inf"), None)
+            for card in handAsList:
+                nextNode = node.playCard(card, maximizingAi)
+                childValue = self.alphabeta(nextNode, card, depth - 1, alpha, beta, maximizingAi)
+                value = (
+                max(value[0], childValue[0]), value[1] if max(value[0], childValue[0]) == value[0] else childValue[1])
 
-        # Play optimally, picking the card that results in the greatest "score"
-        # for the CPU
-        for card in handAsList:
-            nextNode = node.playCard(card, maximizingAi)
-
-            childValue = self.minimax(nextNode, card, depth - 1, not maximizingAi)
-
-            # Maximize
-            if maximizingAi and ((childValue[0] > value[0] and childValue[1] < value[1]) or (childValue[0]-value[0] > childValue[1]-value[1])):
-                value = (childValue[0], childValue[1], card)
-            elif not maximizingAi and ((childValue[0] < value[0] and childValue[1] > value[1]) or (childValue[0]-value[0] < childValue[1]-value[1])):
-                value = (childValue[0], childValue[1], card)
-            elif value[2] is None:
-                value = (childValue[0], childValue[1], card)
-
-        return value
+                if value[0] >= beta:
+                    break
+                alpha = max(alpha, value[0])
+            return value
+        else:
+            value = (float("inf"), None)
+            for card in handAsList:
+                nextNode = node.playCard(card, maximizingAi)
+                childValue = self.alphabeta(nextNode, card, depth - 1, alpha, beta, maximizingAi)
+                value = (min(value[0], childValue[0]), value[1] if min(value[0], childValue[0]) == value[0] else childValue[1])
 
 
-
+                if value[0] <= alpha:
+                    break
+                beta = min(beta, value[0])
+            return value

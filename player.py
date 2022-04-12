@@ -36,6 +36,9 @@ class Player:
     def getHand(self):
         return self.hand
 
+    def getHandCopy(self):
+        return self.handCopy
+
     def cardsRemaining(self):
         return self.handCopy.size
 

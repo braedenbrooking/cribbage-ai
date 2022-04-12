@@ -101,11 +101,17 @@ class GameState:
             copiedHand.add(card)
         return copiedHand
     
-    def StackToList(self, type):
+    def StackToList(self, type, copy=False):
         if type == "player":
-            return self.playerHand[:]
+            if not copy:
+                return self.players[0].getHand()[:]
+            else:
+                return self.players[0].getHandCopy()[:]
         if type == "ai":
-            return self.aiHand[:]
+            if not copy:
+                return self.players[1].getHand()[:]
+            else:
+                return self.players[1].getHandCopy()[:]
         if type == "table":
             return self.cardsOnTable[:]
         else:
@@ -117,19 +123,6 @@ class GameState:
             return self.aiScore
         else:
             return self.playerScore
-        """
-        score = 0
-        if scoringAi:
-            score += self.players[1].pegPoints(self.cardsOnTable, calculateSumOnTable(self.cardsOnTable), prints=False, hypothetical=True)
-        else:
-            score -= self.players[0].pegPoints(self.cardsOnTable, calculateSumOnTable(self.cardsOnTable), prints=False, hypothetical=True)
-        return score
-        
-        aiHandCopy = self.copyStack("ai")
-        if self.cutCard is not None:
-            aiHandCopy.add(self.cutCard)
-        return calculateScore(aiHandCopy)
-        """
 
 
     def cutTheDeck(self, deck):
@@ -154,7 +147,7 @@ class GameState:
 
             #DEBUG
             print("DEBUG")
-            self.printHand()
+            self.printHand(copy=True)
             self.printScore()
             if not playerGo[current]:
                 newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
@@ -240,10 +233,10 @@ class GameState:
         print("The cut card is: " + str(self.cutCard))
         print("===")
 
-    def printHand(self, player=None):
+    def printHand(self, player=None, copy=False):
         for i in range(len(self.players)):
             if i == player or player is None:
                 print("====" + self.players[i].getName() + "'s Hand ====")
-                print(self.players[i].getHand())
+                print(self.players[i].getHand() if not copy else self.players[i].getHandCopy())
                 print("=====================")
 
