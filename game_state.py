@@ -1,7 +1,7 @@
 from urllib.request import AbstractBasicAuthHandler
 import pydealer
-from player import Player
 import random
+from player import Player
 from util import *
 
 
@@ -163,7 +163,10 @@ class GameState:
 
             self.crib = pydealer.Stack()
             self.crib = p1.discardPrompt(self.crib)
+            print("Please wait while AI decides what to discard...")
             self.crib = ai.discardPrompt(self.crib)
+
+
             self.crib.sort(RANKS)
             self.update()
             self.cutCard = self.cutTheDeck(self.deck)

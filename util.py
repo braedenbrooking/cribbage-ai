@@ -1,6 +1,6 @@
 import pydealer
 import copy
-import threading
+
 
 RANKS = {
     "values": {
@@ -17,6 +17,14 @@ RANKS = {
         "4": 4,
         "3": 3,
         "2": 2,
+        "Joker": 0,
+        None: 999
+    },
+    "suits":{
+        "Hearts": 1,
+        "Clubs": 2,
+        "Diamonds": 3,
+        "Spades": 4,
         "Joker": 0,
     }
 }
@@ -95,6 +103,8 @@ def getNextValue(card):
 def convertCardToInt(value):
     if value == "Ace":
         return 1
+    elif value == "Joker":
+        return -999
     try:
         return int(value)
     except ValueError:

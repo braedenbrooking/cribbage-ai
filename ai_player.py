@@ -1,6 +1,5 @@
 import pydealer
 import copy
-import threading
 from player import Player
 from game_state import GameState
 from util import *
@@ -13,7 +12,6 @@ class PlayerAI(Player):
     # Pick a card to discard automagically
     def discardPrompt(self, crib):
         while self.hand.size > 4:
-            # chosenCards = self.pickDiscard(crib)
             chosenCards = self.discardByUtility()
             for chosenCard in chosenCards:
                 # TODO When we are finished obviously we shouldn't print out what the AI does
@@ -60,10 +58,9 @@ class PlayerAI(Player):
                 tempHand = copy.deepcopy(self.hand)  # For Safety
                 card1 = tempHand.get(i)[0]
                 card2 = tempHand.get(j)[0]
-
                 self.calculateUtility(card1, card2, tempHand, deck, utilities)
 
-        for elem in utilities:#.value:
+        for elem in utilities:
             if elem["score"] > bestScore:
                 bestScore = elem["score"]
                 bestCards = elem["cards"]
@@ -72,20 +69,31 @@ class PlayerAI(Player):
 
     def calculateUtility(self, card1, card2, hand, deck, utilityList):
         potentialHandPoints = {}
-        potentialCribPoints = semaphoreDict()
+        potentialCribPoints = {}
         guaranteedHandPts = calculateScore(hand)
 
         guaranteedCribPts = calculateTwoCardsPoints(card1, card2)
 
         for possibleCut in deck:
-            scoreValue = calculateScore(hand, possibleCut)
-            if scoreValue in potentialHandPoints.keys():
-                potentialHandPoints[scoreValue] += 1
+            scoreValueHand = calculateScore(hand, possibleCut)
+            if scoreValueHand in potentialHandPoints.keys():
+                potentialHandPoints[scoreValueHand] += 1
             else:
-                potentialHandPoints[scoreValue] = 1
+                potentialHandPoints[scoreValueHand] = 1
+            tempStack = pydealer.Stack()
+            tempStack.add(pydealer.Card("Joker", "Joker"))
+            tempStack.add(pydealer.Card("Joker", None))
+            tempStack.add(card1)
+            tempStack.add(card2)
+            scoreValueCrib = calculateScore(tempStack, possibleCut)
+            if scoreValueCrib in potentialCribPoints.keys():
+                potentialCribPoints[scoreValueCrib] += 1
+            else:
+                potentialCribPoints[scoreValueCrib] = 1
 
         deckList = deck[:]
         # I know this could be more efficient by not checking certain pairs that the optimal player would likely never throw away (ex 2 5s)
+        """
         for k in range(len(deckList) - 2):
             for l in range(k + 1, len(deckList) - 1):
                 for m in range(l + 1, len(deckList)):
@@ -95,15 +103,19 @@ class PlayerAI(Player):
                     tempStack.add(card1)
                     tempStack.add(card2)
                     cribScoreValue = calculateScore(tempStack, deckList[m])
-                    potentialCribPoints.add(cribScoreValue)
+                    if cribScoreValue in potentialCribPoints.keys():
+                        potentialCribPoints[cribScoreValue] += 1
+                    else:
+                        potentialCribPoints[cribScoreValue] = 1
+        """
 
         potentialHandScore = 0
         for score in potentialHandPoints.keys():
             potentialHandScore += (score-guaranteedHandPts) * (potentialHandPoints[score] / len(deckList))
 
         potentialCribScore = 0
-        for score in potentialCribPoints.value.keys():
-            potentialCribScore += (score-guaranteedCribPts) * (potentialCribPoints.value[score] / 15180)  # (52-6) choose 3
+        for score in potentialCribPoints.keys():
+            potentialCribScore += (score-guaranteedCribPts) * (potentialCribPoints[score] / 15180)  # (52-6) choose 3
 
         if not self.myCrib():
             potentialCribScore = potentialCribScore * -1
@@ -117,111 +129,6 @@ class PlayerAI(Player):
         )
         cards = [card1, card2]
         utilityList.append({"score": utilityScore, "cards": cards})
-
-
-
-    # Use AI method to pick cards to discard
-    # return: the cards to discard
-    # TODO Do we still need this?
-    def pickDiscard(self, crib):
-        # Use BFS to determine if it's possible to reach goal state (15 sum)
-        cardsToDiscard = self.canDiscardFifteen()
-        handAsList = self.hand[:]
-
-        # The AI hand is able to make 15
-        if cardsToDiscard != -1:
-            return cardsToDiscard
-
-        # Can't make 15, use a performance measure to pick 2 cards
-        else:
-            return self.bestTwoToDiscard()
-
-    # Use performance measure to pick worst 2 cards in hand
-    def bestTwoToDiscard(self):
-        handAsList = self.hand[:]
-
-        scoredHand = []
-        for card in handAsList:
-            # How much to scale doubles/triples by
-            doublesScale = 0.5
-
-            # How much to scale 15ability by
-            fifteenScale = 0.15
-
-            # How much to scale 31ability by
-            # Lower than 15 since will usually not hit 31 exactly, but prevent
-            # opponent from hitting it. Also worth less points (2 for 15, 1 for 31)
-            thirtyOneScale = 0.075
-
-            # Card score counts how "good" a card is
-            cardScore = 0
-
-            cardValue = convertCardToInt(card.value)
-
-            # Performance measure: run value, considers how useful the card is to
-            # make or shut down a run. 11 total values so divide by 11
-            cardScore += cardValue / 11
-
-            # Performance measure: pair value, considers how useful the card is in
-            # making pairs. Try to have many unique values
-            # - Having 2 of the same value means the opponent needs 2 (unlikely)
-            # - Having 3 of the same value is useless
-            numDoubles = 0
-            for otherCard in handAsList:
-                if otherCard == card:
-                    continue
-                otherCardValue = convertCardToInt(otherCard.value)
-                if otherCardValue == cardValue:
-                    numDoubles += 1
-            cardScore -= numDoubles * doublesScale
-
-            # Performance measure: 15ability, considers how useful the card is in
-            # summing to 15. Prefer smaller values.
-            cardScore += -1 * fifteenScale * (cardValue - 5)
-
-            # Performance measure: 31ability, considers how useful the card is in
-            # summing to 31 (or preventing the opponent from reaching it).
-            # prefer greater values
-            cardScore += thirtyOneScale * (cardValue - 5)
-
-            scoredHand.append((cardScore, card))
-
-        # Pick the 2 worst cards to discard
-        scoredHand.sort(key=lambda y: y[1])
-        return scoredHand[0:2]
-
-    # Possible to discard 2 to make 15? Use BFS search
-    def canDiscardFifteen(self):
-        handAsList = self.hand[:]
-
-        queue = []
-        for card in handAsList:
-            queue.append([card])
-
-        while len(queue) != 0:
-            # Check the state of the discardPile
-            currentDiscard = queue.pop(0)
-
-            # Limit: We can only discard 2 cards
-            if len(currentDiscard) > 2:
-                return -1
-
-            # Check if the goal state is found (discard sum is 15)
-            sum = 0
-            for card in currentDiscard:
-                sum += convertCardToInt(card.value)
-                if sum == 15:
-                    print(currentDiscard)
-                    return currentDiscard
-
-            # Continue BFS
-            for card in handAsList:
-                if not card in currentDiscard:
-                    newDiscard = currentDiscard.copy()
-                    newDiscard.append(card)
-                    queue.append(newDiscard)
-
-        return -1
 
     # Use AB pruning tree to play a card
     # return: the card to play
