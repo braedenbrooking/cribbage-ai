@@ -142,11 +142,15 @@ class GameState:
         sumOnTable = 0
         self.cardsOnTable = pydealer.Stack()
         while p1.cardsRemaining() > 0 or p2.cardsRemaining() > 0:
+
             current = not current
-            newSumOnTable = 0
 
             if self.players[current].cardsRemaining() == 0:
                 playerGo[current] = True
+                current = not current
+
+
+            newSumOnTable = 0
 
             #DEBUG
             print("DEBUG")
@@ -154,16 +158,18 @@ class GameState:
             self.printScore()
             if not playerGo[current]:
                 newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
-                if newSumOnTable == sumOnTable:
+                if newSumOnTable == sumOnTable or self.players[current].cardsRemaining() == 0:
                     print(self.players[current].getName() + " says go")
-                    if playerGo[not current]:
-                        self.players[current].scorePoints(1)
                     playerGo[current] = True
+                    if all(playerGo):
+                        self.players[current].scorePoints(1)
+
                 elif self.players[current].checkVictory():
-                    print("Player " + str(current + 1) + " has won the game")
+                    print(self.players[current].getName() + " has won the game")
                     return True
 
             sumOnTable = newSumOnTable
+
 
             if sumOnTable == 31:
                 print("31!")
@@ -175,6 +181,9 @@ class GameState:
                 sumOnTable = 0
                 self.cardsOnTable.empty()
                 playerGo = [False, False]
+
+            if self.players[current].cardsRemaining() == 0:
+                playerGo[current] = True
 
         print("Last card played")
         self.players[current].scorePoints(1)
