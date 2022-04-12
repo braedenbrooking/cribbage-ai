@@ -35,7 +35,7 @@ class PlayerAI(Player):
 
         # no playable cards, go
         if len(playableCards) == 0:
-            return
+            return sumOnTable
         elif len(playableCards) == 1:
             card = playableCards[0]
             cardValue = convertCardToInt(card.value)
@@ -45,7 +45,9 @@ class PlayerAI(Player):
 
         sumOnTable += cardValue
         cardsOnTable.add(card)
+        self.handCopy.get(str(card))
         calculatePegPoints(cardsOnTable, sumOnTable, self)
+
         return sumOnTable
 
     def discardByUtility(self):
@@ -176,8 +178,8 @@ class PlayerAI(Player):
                 childValue = self.alphabeta(nextNode, card, depth - 1, alpha, beta, maximizingAi)
                 value = (min(value[0], childValue[0]), value[1] if min(value[0], childValue[0]) == value[0] else childValue[1])
 
-
                 if value[0] <= alpha:
                     break
+
                 beta = min(beta, value[0])
             return value

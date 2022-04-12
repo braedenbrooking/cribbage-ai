@@ -48,7 +48,7 @@ class Player:
         self.copyHand()
 
     def checkVictory(self):
-        if self.getScore() >= 120:
+        if self.getScore() >= 121:
             return True
         else:
             return False
