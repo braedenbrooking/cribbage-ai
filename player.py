@@ -48,10 +48,7 @@ class Player:
         self.copyHand()
 
     def checkVictory(self):
-        if self.getScore() >= 121:
-            return True
-        else:
-            return False
+        return self.getScore() >= 121
 
     def discardPrompt(self, crib):
         print(self.getName() + "'s hand:")

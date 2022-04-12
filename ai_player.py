@@ -142,7 +142,7 @@ class PlayerAI(Player):
 
         # Current depth is 3, maybe change later?
         #cardToPlay = self.alphabeta(node=currentState, cardPlayed=None, depth=3, alpha=float("inf"), beta=float("inf"), maximizingAi=True)
-        cardToPlay = self.decisionTree(node=currentState, cardPlayed=None, depth=3, maximizingAi=True)
+        cardToPlay = self.decisionTree(node=currentState, cardPlayed=None, depth=5, maximizingAi=True)
         return cardToPlay[1]
 
     # Find the best card to play for the AI
@@ -189,7 +189,10 @@ class PlayerAI(Player):
         if depth == 0 or len(self.handCopy[:]) == 0 or calculateSumOnTable(node.cardsOnTable) == 31:
             return (node.aiScore - node.playerScore, cardPlayed)
 
-        handAsList = node.StackToList("ai", copy=True) if maximizingAi else node.StackToList("player", copy=True)
+        if maximizingAi:
+            handAsList = node.StackToList("ai", copy=True)
+        else:
+            handAsList = node.StackToList("player", copy=True)
         print("Here")
 
 
