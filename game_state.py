@@ -1,3 +1,4 @@
+import copy
 from urllib.request import AbstractBasicAuthHandler
 import pydealer
 import random
@@ -8,6 +9,7 @@ from util import *
 class GameState:
     players = []
     playerHand = None
+    playerHandCopy = None
     playerScore = 0
     aiHand = None
     aiScore = 0
@@ -32,6 +34,7 @@ class GameState:
     # Set player's hand (used only for minimax, use this on a copy of the object)
     def setPlayerHand(self, hand):
         self.playerHand = hand
+        self.playerHandCopy = copy.deepcopy(hand)
     
     def setAIHand(self, playable):
         newHand = pydealer.Stack()

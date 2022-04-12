@@ -208,6 +208,9 @@ class PlayerAI(Player):
                     bestCard = card
             return (bestScore, bestCard)
         else:
+            if len(handAsList) <= 0:
+                print("AAAAAAA")
+                print()
             probability = 1/len(handAsList)
             netHeuristic = 0
             for card in handAsList:
