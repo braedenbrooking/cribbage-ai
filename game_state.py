@@ -137,7 +137,8 @@ class GameState:
 
         # current is the index of the current player in the players and playerGo lists
         # this way, the same code doesn't have to be explicitly written for each player
-        current = not p1.myCrib()  # Needs to start reversed
+        current = not p1.myCrib() # Needs to start reversed
+        lastPlayed = None
         playerGo = [False, False]
         sumOnTable = 0
         self.cardsOnTable = pydealer.Stack()
@@ -158,22 +159,32 @@ class GameState:
             self.printScore()
             if not playerGo[current]:
                 newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
-                if newSumOnTable == sumOnTable or self.players[current].cardsRemaining() == 0:
+                if newSumOnTable == sumOnTable:
                     print(self.players[current].getName() + " says go")
                     playerGo[current] = True
                     if all(playerGo):
-                        self.players[current].scorePoints(1)
+                        self.players[lastPlayed].scorePoints(1)
+                else:
+                    lastPlayed = current
 
-                elif self.players[current].checkVictory():
+                if self.players[current].cardsRemaining() == 0:
+                    print(self.players[current].getName() + " says go")
+                    playerGo[current] = True
+                    if all(playerGo):
+                        self.players[lastPlayed].scorePoints(1)
+
+                if self.players[current].checkVictory():
                     print(self.players[current].getName() + " has won the game")
                     return True
+
+
 
             sumOnTable = newSumOnTable
 
 
             if sumOnTable == 31:
                 print("31!")
-                self.players[current].scorePoints(2)
+                self.players[lastPlayed].scorePoints(2)
 
                 playerGo = [True, True]
 
@@ -186,7 +197,7 @@ class GameState:
                 playerGo[current] = True
 
         print("Last card played")
-        self.players[current].scorePoints(1)
+        #self.players[lastPlayed].scorePoints(1)
 
         return False  # returns false if no one has claimed victory
 

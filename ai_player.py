@@ -186,10 +186,13 @@ class PlayerAI(Player):
                 beta = min(beta, value[0])
             return value
 
-
     def decisionTree(self, node, cardPlayed, depth, maximizingAi):
         if depth == 0 or len(self.handCopy[:]) == 0 or calculateSumOnTable(node.cardsOnTable) == 31:
-            return (node.aiScore - node.playerScore, cardPlayed)
+            additionalPoints = 0
+            if calculateSumOnTable(node.cardsOnTable) == 31:
+                additionalPoints = 2 if not maximizingAi else -2
+
+            return (node.aiScore - node.playerScore + additionalPoints, cardPlayed)
 
         if maximizingAi:
             handAsList = node.StackToList("ai", copy=True)
@@ -209,9 +212,6 @@ class PlayerAI(Player):
                     bestCard = card
             return (bestScore, bestCard)
         else:
-            if len(handAsList) <= 0:
-                print("AAAAAAA")
-                print()
             probability = 1/len(handAsList)
             netHeuristic = 0
             for card in handAsList:
