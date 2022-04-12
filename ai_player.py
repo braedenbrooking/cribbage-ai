@@ -213,6 +213,3 @@ class PlayerAI(Player):
 
             return (netHeuristic, cardPlayed)
 
-
-
-

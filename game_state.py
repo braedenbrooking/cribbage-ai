@@ -152,7 +152,7 @@ class GameState:
             if not playerGo[current]:
                 newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
                 if newSumOnTable == sumOnTable:
-                    print("Player " + str(current + 1) + " says go")
+                    print(self.players[current].getName() + " says go")
                     if playerGo[not current]:
                         self.players[current].scorePoints(1)
                     playerGo[current] = True
