@@ -24,6 +24,7 @@ class PlayerAI(Player):
     # Play a card automagically
     def promptToPlay(self, cardsOnTable, sumOnTable):
         # Determine the playable cards
+        print("Please wait while the AI makes its decision...")
         playableCards = []
         handAsList = self.handCopy[:]
         for card in handAsList:
@@ -45,6 +46,7 @@ class PlayerAI(Player):
 
         sumOnTable += cardValue
         cardsOnTable.add(card)
+        print("AI Plays: " + str(card))
         self.handCopy.get(str(card))
         calculatePegPoints(cardsOnTable, sumOnTable, self)
 
@@ -142,7 +144,7 @@ class PlayerAI(Player):
 
         # Current depth is 3, maybe change later?
         #cardToPlay = self.alphabeta(node=currentState, cardPlayed=None, depth=3, alpha=float("inf"), beta=float("inf"), maximizingAi=True)
-        cardToPlay = self.decisionTree(node=currentState, cardPlayed=None, depth=5, maximizingAi=True)
+        cardToPlay = self.decisionTree(node=currentState, cardPlayed=None, depth=3, maximizingAi=True)
         return cardToPlay[1]
 
     # Find the best card to play for the AI
@@ -193,7 +195,6 @@ class PlayerAI(Player):
             handAsList = node.StackToList("ai", copy=True)
         else:
             handAsList = node.StackToList("player", copy=True)
-        print("Here")
 
 
         if maximizingAi:

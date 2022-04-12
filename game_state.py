@@ -47,8 +47,8 @@ class GameState:
                       self,
                       newPlayers=None,
                       newDeck=None,
-                      newPlayerHand=None,
-                      newAiHand=None,
+                      newPlayerHandCopy=None,
+                      newAiHandCopy=None,
                       newCardsOnTable=None,
                       newDiscardPile=None,
                       newCutCard=None,
@@ -60,8 +60,8 @@ class GameState:
         stateCopy = copy.deepcopy(self)
         stateCopy.players = newPlayers if newPlayers is not None else stateCopy.players
         stateCopy.deck = newDeck if newDeck is not None else stateCopy.deck
-        stateCopy.playerHand = newPlayerHand if newPlayerHand is not None else stateCopy.playerHand
-        stateCopy.aiHand = newAiHand if newAiHand is not None else stateCopy.aiHand
+        stateCopy.playerHandCopy = newPlayerHandCopy if newPlayerHandCopy is not None else stateCopy.playerHand
+        stateCopy.aiHandCopy = newAiHandCopy if newAiHandCopy is not None else stateCopy.aiHand
         stateCopy.cardsOnTable = newCardsOnTable if newCardsOnTable is not None else stateCopy.cardsOnTable
         stateCopy.discardPile = newDiscardPile if newDiscardPile is not None else stateCopy.discardPile
         stateCopy.cutCard = newCutCard if newCutCard is not None else stateCopy.cutCard
@@ -73,15 +73,15 @@ class GameState:
 
     # returns a new state with this state as the base
     def playCard(self, card, isAiPlayer):
-        newPlayerHand = self.copyStack("player", copy=True)
-        newAiHand = self.copyStack("ai", copy=True)
+        newPlayerHandCopy = self.copyStack("player", copy=True)
+        newAiHandCopy = self.copyStack("ai", copy=True)
         newTable = self.copyStack("table")
 
         # Remove the card from the correct player's hand
         if isAiPlayer:
-            newAiHand.get(newAiHand.find(str(card))[0])
+            newAiHandCopy.get(newAiHandCopy.find(str(card))[0])
         else:
-            newPlayerHand.get(newPlayerHand.find(str(card))[0])
+            newPlayerHandCopy.get(newPlayerHandCopy.find(str(card))[0])
 
         # Add the new card to the top of the table pile
         newTable.add(card)
@@ -89,8 +89,8 @@ class GameState:
 
 
         return self.createModCopy(
-            newPlayerHand=newPlayerHand,
-            newAiHand=newAiHand,
+            newPlayerHandCopy=newPlayerHandCopy,
+            newAiHandCopy=newAiHandCopy,
             newCardsOnTable=newTable,
             newPlayerScore=self.playerScore+points if not isAiPlayer else None,
             newAiScore=self.aiScore+points if isAiPlayer else None
@@ -107,9 +107,9 @@ class GameState:
     def StackToList(self, type, copy=False):
         if type == "player":
             if not copy:
-                return self.players[0].getHand()[:]
+                return self.playerHand
             else:
-                return self.players[0].getHandCopy()[:]
+                return self.playerHandCopy
         if type == "ai":
             if not copy:
                 return self.players[1].getHand()[:]
