@@ -115,72 +115,8 @@ class Player:
             else:
                 sumOnTable += cardValue
                 cardsOnTable.add(card)
-                self.pegPoints(cardsOnTable, sumOnTable)
+                calculatePegPoints(cardsOnTable, sumOnTable, self)
                 return sumOnTable
-
-    def pegPoints(self, cardsOnTable, sumOnTable):
-        if cardsOnTable.size == 1:
-            return
-
-        # Points for 15s (31s counted elsewhere)
-        if sumOnTable == 15:
-            print("15 for 2")
-            self.scorePoints(2)
-
-        # Points for pairs, 3 of a kinds, and 4 of a kinds
-        if checkForPair(
-            cardsOnTable[cardsOnTable.size - 1], cardsOnTable[cardsOnTable.size - 2]
-        ):
-            if cardsOnTable.size > 2 and checkForPair(
-                cardsOnTable[cardsOnTable.size - 1], cardsOnTable[cardsOnTable.size - 3]
-            ):
-                if cardsOnTable.size > 3 and checkForPair(
-                    cardsOnTable[cardsOnTable.size - 1],
-                    cardsOnTable[cardsOnTable.size - 4],
-                ):
-                    print("4 of a kind for 12")
-                    self.scorePoints(12)
-                else:
-                    print("3 of a kind for 6")
-                    self.scorePoints(6)
-            else:
-                print("Pair for 2")
-                self.scorePoints(2)
-            return  # Points for runs aren't possible if there is a pair, so there's no point in continuing through the function if you get here
-
-        if cardsOnTable.size < 3:
-            return
-
-        # Points for runs (Not possible if there is a pair)
-        top = pydealer.Stack()
-        top.insert_list(
-            [
-                cardsOnTable[cardsOnTable.size - 1],
-                cardsOnTable[cardsOnTable.size - 2],
-                cardsOnTable[cardsOnTable.size - 3],
-            ],
-            0,
-        )
-        top.sort(RANKS)
-        runPoints = 0
-        if cardsOnTable.size == 3:
-            if checkForRun(top):
-                runPoints = 3
-        else:
-            for i in range(cardsOnTable.size - 3):
-                if checkForRun(top):
-                    if runPoints == 0:
-                        runPoints = 3
-                    else:
-                        runPoints += 1
-                    top.add(cardsOnTable[cardsOnTable.size - (4 + i)])
-                    top.sort(RANKS)
-                else:
-                    break
-
-        if runPoints > 0:
-            print(str(runPoints) + " for a run")
-            self.scorePoints(runPoints)
 
     def scoreHand(self, cutCard=None, scoringHand=None):
         print()

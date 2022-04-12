@@ -100,7 +100,7 @@ def getNextValue(card):
             return "Null"
 
 
-def convertCardToInt(value):
+def convertCardToInt(value: str):
     if value == "Ace":
         return 1
     elif value == "Joker":
@@ -229,3 +229,91 @@ def calculateScore(scoringHand, cutCard=None, prints=False):
                 if prints:
                     print("The right Jack (nobs) is" + str(totalHandScore))
     return totalHandScore
+
+def calculateSumOnTable(cardsOnTable):
+    sumOnTable = 0
+    for card in cardsOnTable:
+        sumOnTable += convertCardToInt(card.value)
+    return sumOnTable
+
+def calculatePegPoints(cardsOnTable, sumOnTable, player=None,prints=True):
+    points = 0
+    if cardsOnTable.size == 1:
+        return points
+
+    # Points for 15s (31s counted elsewhere)
+    if sumOnTable == 15:
+        points += 2
+        if prints:
+            print("15 for 2")
+        if player is not None:
+            player.scorePoints(2)
+
+    # Points for pairs, 3 of a kinds, and 4 of a kinds
+    if checkForPair(
+            cardsOnTable[cardsOnTable.size - 1], cardsOnTable[cardsOnTable.size - 2]
+    ):
+        if cardsOnTable.size > 2 and checkForPair(
+                cardsOnTable[cardsOnTable.size - 1], cardsOnTable[cardsOnTable.size - 3]
+        ):
+            if cardsOnTable.size > 3 and checkForPair(
+                    cardsOnTable[cardsOnTable.size - 1],
+                    cardsOnTable[cardsOnTable.size - 4],
+            ):
+                points += 12
+                if prints:
+                    print("4 of a kind for 12")
+                if player is not None:
+                    player.scorePoints(12)
+            else:
+                points += 6
+                if prints:
+                    print("3 of a kind for 6")
+                if player is not None:
+                    player.scorePoints(6)
+        else:
+            points += 2
+            if prints:
+                print("Pair for 2")
+            if player is not None:
+                player.scorePoints(2)
+        return points  # Points for runs aren't possible if there is a pair, so there's no point in continuing through the function if you get here
+
+    if cardsOnTable.size < 3:
+        return points
+
+    # Points for runs (Not possible if there is a pair)
+    top = pydealer.Stack()
+    top.insert_list(
+        [
+            cardsOnTable[cardsOnTable.size - 1],
+            cardsOnTable[cardsOnTable.size - 2],
+            cardsOnTable[cardsOnTable.size - 3],
+        ],
+        0,
+    )
+    top.sort(RANKS)
+    runPoints = 0
+    if cardsOnTable.size == 3:
+        if checkForRun(top):
+            runPoints = 3
+    else:
+        for i in range(cardsOnTable.size - 3):
+            if checkForRun(top):
+                if runPoints == 0:
+                    runPoints = 3
+                else:
+                    runPoints += 1
+                top.add(cardsOnTable[cardsOnTable.size - (4 + i)])
+                top.sort(RANKS)
+            else:
+                break
+
+    if runPoints > 0:
+        points += runPoints
+        if prints:
+            print(str(runPoints) + " for a run")
+        if player is not None:
+            player.scorePoints(runPoints)
+
+    return points

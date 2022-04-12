@@ -8,13 +8,16 @@ from util import *
 class GameState:
     players = []
     playerHand = None
+    playerScore = 0
     aiHand = None
+    aiScore = 0
     cardsOnTable = None
     discardPile = None
     cutCard = None
     crib = None
     deck = None
     dealer = None
+
 
     def __init__(self, p1: Player, ai: Player):
         self.players = [p1, ai]
@@ -37,7 +40,20 @@ class GameState:
         self.aiHand = newHand
 
     # Creates a copy of its self modified with the attributes given; Used by ai to predict possible futures
-    def createModCopy(self, newPlayers=None, newDeck=None, newPlayerHand=None, newAiHand=None, newCardsOnTable=None, newDiscardPile=None, newCutCard=None, newCrib=None, newDealer=None):
+    def createModCopy(
+                      self,
+                      newPlayers=None,
+                      newDeck=None,
+                      newPlayerHand=None,
+                      newAiHand=None,
+                      newCardsOnTable=None,
+                      newDiscardPile=None,
+                      newCutCard=None,
+                      newCrib=None,
+                      newDealer=None,
+                      newPlayerScore=None,
+                      newAiScore=None):
+
         stateCopy = copy.deepcopy(self)
         stateCopy.players = newPlayers if newPlayers is not None else stateCopy.players
         stateCopy.deck = newDeck if newDeck is not None else stateCopy.deck
@@ -48,6 +64,8 @@ class GameState:
         stateCopy.cutCard = newCutCard if newCutCard is not None else stateCopy.cutCard
         stateCopy.crib = newCrib if newCrib is not None else stateCopy.crib
         stateCopy.dealer = newDealer if newDealer is not None else stateCopy.dealer
+        stateCopy.playerScore = newPlayerScore if newPlayerScore is not None else stateCopy.playerScore
+        stateCopy.aiScore = newAiScore if newAiScore is not None else stateCopy.aiScore
         return stateCopy
 
     # returns a new state with this state as the base
@@ -58,17 +76,21 @@ class GameState:
 
         # Remove the card from the correct player's hand
         if isAiPlayer:
-            newAiHand.get(card)
+            newAiHand.get(newAiHand.find(str(card))[0])
         else:
-            newPlayerHand.get(card)
+            newPlayerHand.get(newPlayerHand.find(str(card))[0])
 
         # Add the new card to the top of the table pile
         newTable.add(card)
+        points = self.aiScore + calculatePegPoints(newTable, calculateSumOnTable(newTable), player=None, prints=False)
+
 
         return self.createModCopy(
             newPlayerHand=newPlayerHand,
             newAiHand=newAiHand,
-            newCardsOnTable=newTable
+            newCardsOnTable=newTable,
+            newPlayerScore=self.playerScore+points if not isAiPlayer else None,
+            newAiScore=self.aiScore+points if isAiPlayer else None
         )
 
     # type: "player", "ai", "table"
@@ -86,14 +108,29 @@ class GameState:
             return self.aiHand[:]
         if type == "table":
             return self.cardsOnTable[:]
-        else: return
+        else:
+            return
 
     # Score the state of this state for the AI
-    def score(self):
+    def score(self, scoringAi=True):
+        if scoringAi:
+            return self.aiScore
+        else:
+            return self.playerScore
+        """
+        score = 0
+        if scoringAi:
+            score += self.players[1].pegPoints(self.cardsOnTable, calculateSumOnTable(self.cardsOnTable), prints=False, hypothetical=True)
+        else:
+            score -= self.players[0].pegPoints(self.cardsOnTable, calculateSumOnTable(self.cardsOnTable), prints=False, hypothetical=True)
+        return score
+        
         aiHandCopy = self.copyStack("ai")
         if self.cutCard is not None:
             aiHandCopy.add(self.cutCard)
         return calculateScore(aiHandCopy)
+        """
+
 
     def cutTheDeck(self, deck):
         return deck.deal(1)[0]
@@ -115,6 +152,10 @@ class GameState:
             if self.players[current].cardsRemaining() == 0:
                 playerGo[current] = True
 
+            #DEBUG
+            print("DEBUG")
+            self.printHand()
+            self.printScore()
             if not playerGo[current]:
                 newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
                 if newSumOnTable == sumOnTable:
@@ -148,6 +189,8 @@ class GameState:
     def update(self):
         self.playerHand = self.players[0].getHand()
         self.aiHand = self.players[1].getHand()
+        self.playerScore = self.players[0].getScore()
+        self.aiScore = self.players[1].getScore()
 
     def gameFlow(self):
         p1 = self.players[0]
@@ -196,3 +239,11 @@ class GameState:
         print("===")
         print("The cut card is: " + str(self.cutCard))
         print("===")
+
+    def printHand(self, player=None):
+        for i in range(len(self.players)):
+            if i == player or player is None:
+                print("====" + self.players[i].getName() + "'s Hand ====")
+                print(self.players[i].getHand())
+                print("=====================")
+

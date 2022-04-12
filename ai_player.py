@@ -36,13 +36,16 @@ class PlayerAI(Player):
         # no playable cards, go
         if len(playableCards) == 0:
             return
-
-        card = self.pickPlay(playableCards)
-        cardValue = convertCardToInt(card.value)
+        elif len(playableCards) == 1:
+            card = playableCards[0]
+            cardValue = convertCardToInt(card.value)
+        else:
+            card = self.pickPlay(playableCards)
+            cardValue = convertCardToInt(card.value)
 
         sumOnTable += cardValue
         cardsOnTable.add(card)
-        self.pegPoints(cardsOnTable, sumOnTable)
+        calculatePegPoints(cardsOnTable, sumOnTable, self)
         return sumOnTable
 
     def discardByUtility(self):
@@ -140,7 +143,6 @@ class PlayerAI(Player):
         #   maximize pairs/triplets etc
         #   priority: triplets and above > runs > 15s
 
-        # TODO: currentState is the state of the game currently
         # i.e. use the game_state constructor
         currentState = copy.deepcopy(self.gameStateRef)
 
@@ -160,68 +162,44 @@ class PlayerAI(Player):
         currentState.setAIHand(playableCards)
 
         # Current depth is 3, maybe change later?
-        cardToPlay = self.minimax(currentState, None, 3, True)
-        return cardToPlay[1]
+        cardToPlay = self.minimax(node=currentState, cardPlayed=None, depth=3, maximizingAi=True)
+
+        return cardToPlay[2]
 
     # Find the best card to play for the AI
     # Parameters:
     #   node             = the current node to score
     #   cardPlayed       = the card played during this turn
     #   depth            = how many turns ahead we want to check. Depth of 3 = bot turn, player turn, bot turn
-    #   maximizingPlayer = True if it's the bot's turn, otherwise false
+    #   maximizingAi = True if it's the bot's turn, otherwise false
     # Return:
     #   a tuple (score, card) representing what score is expected by playing the best card and what card that is
-    def minimax(self, node, cardPlayed, depth, maximizingPlayer):
-        if depth == 0:  # TODO: potentially need to add: OR node is a terminal node
-            score = node.score()
+    def minimax(self, node, cardPlayed, depth, maximizingAi):
+        if depth == 0 or len(self.hand[:]) == 0:  # TODO: potentially need to add: OR node is a terminal node
+            return(node.aiScore, node.playerScore, cardPlayed)
 
-            # Return a tuple of the score and the card played in that round
-            return (score, cardPlayed)
 
-        if maximizingPlayer:
-            # Value tuple follows same format as return tuple
-            value = (-1 * float("inf"), None)
+        value = (-1*float("inf"), float("inf"), None)
+        handAsList = node.StackToList("ai") if maximizingAi else node.StackToList("player")
 
-            # TODO: cards need to be removed from this temp hand when played; dont copy actual hand every time
-            #! now hand is taken from the node. this SHOULD be accurate i believe?
-            handAsList = node.StackToList("ai")
+        # 'value' tuple follows same format as return tuple
 
-            # Play optimally, picking the card that results in the greatest "score"
-            # for the CPU
-            for card in handAsList:
-                # nextNode is the state of the game as a result of playing the card variable
-                # They ARE the AI player (true)
-                nextNode = node.playCard(card, True)
+        # Play optimally, picking the card that results in the greatest "score"
+        # for the CPU
+        for card in handAsList:
+            nextNode = node.playCard(card, maximizingAi)
 
-                childValue = self.minimax(nextNode, card, depth - 1, False)
+            childValue = self.minimax(nextNode, card, depth - 1, not maximizingAi)
 
-                # Maximize
-                if childValue[0] > value[0]:
-                    value = (childValue[0], card)
-            return value
+            # Maximize
+            if maximizingAi and ((childValue[0] > value[0] and childValue[1] < value[1]) or (childValue[0]-value[0] > childValue[1]-value[1])):
+                value = (childValue[0], childValue[1], card)
+            elif not maximizingAi and ((childValue[0] < value[0] and childValue[1] > value[1]) or (childValue[0]-value[0] < childValue[1]-value[1])):
+                value = (childValue[0], childValue[1], card)
+            elif value[2] is None:
+                value = (childValue[0], childValue[1], card)
 
-        else:
-            # Value tuple follows same format as return tuple
-            value = (float("inf"), None)
+        return value
 
-            # TODO: Placeholder, in reality, will need to find out what to put for the real player's hand...
-            #       i.e. replace this with something. Should the bot "know" the player's actual hand to
-            #       make it seem like a better opponent?
-            #! this should work but is also EXTREMELY big
-            handAsList = node.StackToList("player")
-
-            # Assuming the player plays optimally, and picks the card that results
-            # in lowest "score" for the CPU
-            for card in handAsList:
-                # nextNode is the state of the game as a result of playing the card variable
-                # They are NOT the ai player (false)
-                nextNode = node.playCard(card, False)
-
-                childValue = self.minimax(nextNode, card, depth - 1, True)
-
-                # Minimize
-                if childValue[0] < value[0]:
-                    value = (childValue[0], card)
-            return value
 
 
