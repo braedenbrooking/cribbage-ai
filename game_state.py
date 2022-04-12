@@ -70,8 +70,8 @@ class GameState:
 
     # returns a new state with this state as the base
     def playCard(self, card, isAiPlayer):
-        newPlayerHand = self.copyStack("player")
-        newAiHand = self.copyStack("ai")
+        newPlayerHand = self.copyStack("player", copy=True)
+        newAiHand = self.copyStack("ai", copy=True)
         newTable = self.copyStack("table")
 
         # Remove the card from the correct player's hand
@@ -94,8 +94,8 @@ class GameState:
         )
 
     # type: "player", "ai", "table"
-    def copyStack(self, type):
-        stackAsList = self.StackToList(type)
+    def copyStack(self, type, copy=False):
+        stackAsList = self.StackToList(type, copy)
         copiedHand = pydealer.Stack()
         for card in stackAsList:
             copiedHand.add(card)

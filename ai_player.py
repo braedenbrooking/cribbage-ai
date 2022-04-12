@@ -157,15 +157,14 @@ class PlayerAI(Player):
         if depth == 0 or len(self.handCopy[:]) == 0:  # TODO: potentially need to add: OR node is a terminal node
             return(node.aiScore - node.playerScore, cardPlayed)
 
-        handAsList = node.StackToList("ai") if maximizingAi else node.StackToList("player")
+        handAsList = node.StackToList("ai", copy=True) if maximizingAi else node.StackToList("player", copy=True)
 
         if maximizingAi:
             value = (-1*float("inf"), None)
             for card in handAsList:
                 nextNode = node.playCard(card, maximizingAi)
                 childValue = self.alphabeta(nextNode, card, depth - 1, alpha, beta, maximizingAi)
-                value = (
-                max(value[0], childValue[0]), value[1] if max(value[0], childValue[0]) == value[0] else childValue[1])
+                value = (max(value[0], childValue[0]), value[1] if max(value[0], childValue[0]) == value[0] else childValue[1])
 
                 if value[0] >= beta:
                     break
