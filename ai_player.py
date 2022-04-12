@@ -14,8 +14,7 @@ class PlayerAI(Player):
         while self.hand.size > 4:
             chosenCards = self.discardByUtility()
             for chosenCard in chosenCards:
-                # TODO When we are finished obviously we shouldn't print out what the AI does
-                print("AI Player discards " + str(chosenCard))
+                #print("AI Player discards " + str(chosenCard)) #DEBUG
                 crib.add(self.hand.get(str(chosenCard)))
                 self.cardsPutInCrib.add((chosenCard))
         self.handCopy = copy.deepcopy(self.hand)
@@ -46,7 +45,7 @@ class PlayerAI(Player):
 
         sumOnTable += cardValue
         cardsOnTable.add(card)
-        print("AI Plays: " + str(card))
+        #print("AI Plays: " + str(card)) #DEBUG
         self.handCopy.get(str(card))
         calculatePegPoints(cardsOnTable, sumOnTable, self)
 

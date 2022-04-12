@@ -154,9 +154,9 @@ class GameState:
             newSumOnTable = 0
 
             #DEBUG
-            print("DEBUG")
-            self.printHand(copy=True)
-            self.printScore()
+            #print("DEBUG")
+            #self.printHand(copy=True)
+            #self.printScore()
             if not playerGo[current]:
                 newSumOnTable = self.players[current].promptToPlay(self.cardsOnTable, sumOnTable)
                 if newSumOnTable == sumOnTable:
@@ -177,10 +177,7 @@ class GameState:
                     print(self.players[current].getName() + " has won the game")
                     return True
 
-
-
             sumOnTable = newSumOnTable
-
 
             if sumOnTable == 31:
                 print("31!")
@@ -197,7 +194,6 @@ class GameState:
                 playerGo[current] = True
 
         print("Last card played")
-        #self.players[lastPlayed].scorePoints(1)
 
         return False  # returns false if no one has claimed victory
 

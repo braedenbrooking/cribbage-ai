@@ -123,7 +123,7 @@ class Player:
         if scoringHand is None:
             scoringHand = self.hand
 
-        print("Scoring hand: ")
+        print("Scoring " + self.getName() + "'s hand: ")
         print(scoringHand)
         print("With Cut Card: ")
         print(cutCard)

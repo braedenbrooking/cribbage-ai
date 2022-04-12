@@ -132,7 +132,7 @@ def calculateScore(scoringHand, cutCard=None, prints=False):
             and scoringHand[0].suit == scoringHand[2].suit
             and scoringHand[0].suit == scoringHand[3].suit
     ):
-        if len(scoringHand) < 5 or scoringHand[0].suit == scoringHand[4].suit:
+        if len(scoringHand) < 5 or scoringHand[0].suit != scoringHand[4].suit:
             totalHandScore += 4
             if prints:
                 print("Flush excluding the cut for " + str(totalHandScore))
