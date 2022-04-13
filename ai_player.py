@@ -142,48 +142,9 @@ class PlayerAI(Player):
         currentState.setAIHand(playableCards)
 
         # Current depth is 3, maybe change later?
-        #cardToPlay = self.alphabeta(node=currentState, cardPlayed=None, depth=3, alpha=float("inf"), beta=float("inf"), maximizingAi=True)
         cardToPlay = self.decisionTree(node=currentState, cardPlayed=None, depth=3, maximizingAi=True)
         return cardToPlay[1]
 
-    # Find the best card to play for the AI
-    # Parameters:
-    #   node             = the current node to score
-    #   cardPlayed       = the card played during this turn
-    #   depth            = how many turns ahead we want to check. Depth of 3 = bot turn, player turn, bot turn
-    #   maximizingAi = True if it's the bot's turn, otherwise false
-    # Return:
-    #   a tuple (score, card) representing what score is expected by playing the best card and what card that is
-    def alphabeta(self, node, cardPlayed, depth, alpha, beta, maximizingAi):
-
-        if depth == 0 or len(self.handCopy[:]) == 0:  # TODO: potentially need to add: OR node is a terminal node
-            return(node.aiScore - node.playerScore, cardPlayed)
-
-        handAsList = node.StackToList("ai", copy=True) if maximizingAi else node.StackToList("player", copy=True)
-
-        if maximizingAi:
-            value = (-1*float("inf"), None)
-            for card in handAsList:
-                nextNode = node.playCard(card, maximizingAi)
-                childValue = self.alphabeta(nextNode, card, depth - 1, alpha, beta, not maximizingAi)
-                value = (max(value[0], childValue[0]), value[1] if max(value[0], childValue[0]) == value[0] else childValue[1])
-
-                if value[0] >= beta:
-                    break
-                alpha = max(alpha, value[0])
-            return value
-        else:
-            value = (float("inf"), None)
-            for card in handAsList:
-                nextNode = node.playCard(card, maximizingAi)
-                childValue = self.alphabeta(nextNode, card, depth - 1, alpha, beta, not maximizingAi)
-                value = (min(value[0], childValue[0]), value[1] if min(value[0], childValue[0]) == value[0] else childValue[1])
-
-                if value[0] <= alpha:
-                    break
-
-                beta = min(beta, value[0])
-            return value
 
     def decisionTree(self, node, cardPlayed, depth, maximizingAi):
         if depth == 0 or len(self.handCopy[:]) == 0 or calculateSumOnTable(node.cardsOnTable) == 31:
@@ -204,7 +165,7 @@ class PlayerAI(Player):
             bestScore = -1*float("inf")
             for card in handAsList:
                 nextNode = node.playCard(card, maximizingAi)
-                heuristicScore = self.decisionTree(nextNode, card, depth-1, not maximizingAi)[0]
+                heuristicScore = self.decisionTree(nextNode, card, depth-1, not maximizingAi)[0] + (node.aiScore - node.playerScore)
 
                 if heuristicScore > bestScore:
                     bestScore = heuristicScore
@@ -212,7 +173,7 @@ class PlayerAI(Player):
             return (bestScore, bestCard)
         else:
             probability = 1/len(handAsList)
-            netHeuristic = 0
+            netHeuristic = node.aiScore - node.playerScore
             for card in handAsList:
                 nextNode = node.playCard(card, maximizingAi)
                 netHeuristic += probability * self.decisionTree(nextNode, card, depth-1, not maximizingAi)[0]
