@@ -156,38 +156,27 @@ def calculateScore(scoringHand, cutCard=None, prints=False):
             print(str(fifteenspoints) + " from 15s")
         totalHandScore += fifteenspoints
 
-    # 4 of a kinds, 3 of a kinds, and pairs
-    pairValues = []  # Stores the card values of the pairs (ie hand = [3,3,4,4,7] -> pairValues = ['3','4']
-    threeValue = None  # Same as above but there can only be one 3 of a kind
-    fourValue = None  # Same as above
+    # 4, 3, and 2 of a kinds
+    valueDict = {}
     for i in range(scoringHand.size):
-        for j in range(i + 1, scoringHand.size):
-            if not checkForPair(scoringHand[i], scoringHand[j]):
-                continue
-            elif scoringHand[i].value == threeValue:
-                threeValue = None
-                fourValue = scoringHand[i].value
-                break
-            elif scoringHand[i].value in pairValues:
-                pairValues.remove(scoringHand[i].value)
-                threeValue = scoringHand[i].value
-            else:
-                pairValues.append(scoringHand[i].value)
+        if scoringHand[i].value in valueDict.keys():
+            valueDict[scoringHand[i].value] += 1
+        else:
+            valueDict[scoringHand[i].value] = 1
 
-    for val in pairValues:
-        totalHandScore += 2
-        if prints:
-            print("A pair of " + val + "s is " + str(totalHandScore))
-
-    if threeValue is not None:
-        totalHandScore += 6
-        if prints:
-            print("3 " + threeValue + "s is " + str(totalHandScore))
-
-    if fourValue is not None:
-        totalHandScore += 12
-        if prints:
-            print("4 " + fourValue + "s is " + str(totalHandScore))
+    for key in valueDict.keys():
+        if valueDict[key] == 2:
+            totalHandScore += 2
+            if prints:
+                print("A pair of " + key + "s is " + str(totalHandScore))
+        elif valueDict[key] == 3:
+            totalHandScore += 6
+            if prints:
+                print("3 " + key + "s is " + str(totalHandScore))
+        elif valueDict[key] == 4:
+            totalHandScore += 12
+            if prints:
+                print("4 " + key + "s is " + str(totalHandScore))
 
     # Runs
     runs = []
@@ -217,9 +206,20 @@ def calculateScore(scoringHand, cutCard=None, prints=False):
                     run.append(l)
 
     for run in runs:
+        run.sort()
+
+    for i in range(len(runs)-1):
+        for j in range(i+1,len(runs)):
+            if runs[i] == runs[j]:
+                runs[j] = None
+
+    for run in runs:
+        if run is None:
+            continue
         if prints:
             print("Run of " + str(len(run)))
         totalHandScore += len(run)
+
 
     # Nobs (The right jack)
     if cutCard is not None:

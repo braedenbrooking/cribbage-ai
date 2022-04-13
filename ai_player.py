@@ -45,7 +45,7 @@ class PlayerAI(Player):
 
         sumOnTable += cardValue
         cardsOnTable.add(card)
-        #print("AI Plays: " + str(card)) #DEBUG
+        print("AI Plays: " + str(card))
         self.handCopy.get(str(card))
         calculatePegPoints(cardsOnTable, sumOnTable, self)
 
